@@ -3,40 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرصد الهلال - الإصدار النهائي</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/astronomy-engine/2.1.19/astronomy.browser.min.js"></script>
+    <title>مرصد الهلال - الإصدار المستقر</title>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
-        .card { background: #1a1f2b; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; border: 2px solid #4361ee; }
+        .card { background: #1a1f2b; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; border: 2px solid #4361ee; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #242c3d; color: white; font-size: 18px; text-align: center; }
-        button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        .result-box { margin-top: 20px; text-align: right; background: #242c3d; padding: 15px; border-radius: 10px; display: none; }
+        button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        button:disabled { background: #444; cursor: not-allowed; }
+        .result-box { margin-top: 20px; text-align: right; background: #242c3d; padding: 15px; border-radius: 10px; display: none; border: 1px solid #4cc9f0; }
         .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
-        #status { color: #4cc9f0; font-size: 14px; margin-top: 10px; }
+        #status { font-size: 14px; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>مرصد الهلال الذكي</h2>
-        <input type="number" id="lat" placeholder="خط العرض (مثلاً 30.5)" step="any" value="30.5">
-        <input type="number" id="lon" placeholder="خط الطول (مثلاً 47.8)" step="any" value="47.8">
-        <button onclick="calculate()">احسب الآن</button>
+        <p id="loading-msg" style="color: #f9d71c; font-size: 12px;">جاري تحميل المحرك الفلكي...</p>
+        
+        <input type="number" id="lat" placeholder="خط العرض" value="30.5" step="any">
+        <input type="number" id="lon" placeholder="خط الطول" value="47.8" step="any">
+        
+        <button id="calcBtn" onclick="calculate()" disabled>انتظر التحميل...</button>
         <p id="status"></p>
 
         <div id="results" class="result-box">
             <div class="row"><span>🌅 وقت الغروب:</span> <span id="v-sunset"></span></div>
             <div class="row"><span>🌑 المحاق (التولد):</span> <span id="v-newmoon"></span></div>
-            <div class="row" style="color: #4cc9f0; font-weight: bold;"><span>⏳ عمر الهلال:</span> <span id="v-age"></span></div>
+            <div class="row" style="color: #4cc9f0;"><span>⏳ عمر الهلال:</span> <span id="v-age"></span></div>
             <div class="row"><span>📐 الارتفاع:</span> <span id="v-alt"></span></div>
             <div class="row"><span>📏 البعد الزاوي:</span> <span id="v-elong"></span></div>
         </div>
     </div>
 
     <script>
+        // فحص تحميل المكتبة
+        window.onload = function() {
+            if (typeof Astronomy !== 'undefined') {
+                enableApp();
+            } else {
+                let checkInt = setInterval(() => {
+                    if (typeof Astronomy !== 'undefined') {
+                        enableApp();
+                        clearInterval(checkInt);
+                    }
+                }, 1000);
+            }
+        };
+
+        function enableApp() {
+            document.getElementById('calcBtn').disabled = false;
+            document.getElementById('calcBtn').innerText = "احسب الآن";
+            document.getElementById('loading-msg').innerText = "المحرك الفلكي جاهز ✅";
+            document.getElementById('loading-msg').style.color = "#4cc9f0";
+        }
+
         function calculate() {
             const status = document.getElementById('status');
             const resDiv = document.getElementById('results');
-            status.innerText = "جاري التحليل الفلكي...";
             
             try {
                 const lat = parseFloat(document.getElementById('lat').value);
@@ -44,25 +68,18 @@
                 const observer = new Astronomy.Observer(lat, lon, 0);
                 const now = new Date();
 
-                // 1. حساب الغروب
                 const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, now, 1);
-                if(!sunset) throw "تعذر حساب الغروب";
-
-                // 2. حساب المحاق
                 const mq = Astronomy.SearchMoonQuarter(sunset.date);
                 const newMoon = mq.prev.date;
 
-                // 3. حساب العمر
                 const ageMs = sunset.date.getTime() - newMoon.getTime();
                 const hrs = Math.floor(ageMs / 3600000);
                 const mins = Math.floor((ageMs % 3600000) / 60000);
 
-                // 4. الحسابات الموقعية
                 const moonEquator = Astronomy.Equator(Astronomy.Body.Moon, sunset.date, observer);
                 const moonHoriz = Astronomy.Horizon(sunset.date, observer, moonEquator.ra, moonEquator.dec, 'nora');
                 const elong = Astronomy.Elongation(Astronomy.Body.Moon, sunset.date);
 
-                // عرض النتائج
                 document.getElementById('v-sunset').innerText = sunset.date.toLocaleTimeString('ar-EG');
                 document.getElementById('v-newmoon').innerText = newMoon.toLocaleTimeString('ar-EG');
                 document.getElementById('v-age').innerText = hrs + " ساعة و " + mins + " دقيقة";
@@ -70,11 +87,12 @@
                 document.getElementById('v-elong').innerText = elong.angsep.toFixed(2) + "°";
 
                 resDiv.style.display = 'block';
-                status.innerText = "تم الحساب بنجاح ✅";
+                status.innerText = "تم تحديث البيانات بنجاح";
+                status.style.color = "#4cc9f0";
 
             } catch (e) {
-                status.innerText = "خطأ: " + e;
-                console.error(e);
+                status.innerText = "خطأ: تأكد من جودة الإنترنت";
+                status.style.color = "#ff4d4d";
             }
         }
     </script>
