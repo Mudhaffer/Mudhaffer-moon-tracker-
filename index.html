@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرصد الهلال - النسخة المباشرة</title>
+    <title>مرصد الهلال - الإصدار النهائي</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
@@ -12,7 +12,7 @@
         button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .result-box { margin-top: 20px; text-align: right; background: #242c3d; padding: 15px; border-radius: 10px; display: none; border: 1px solid #4cc9f0; }
         .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
-        #debug { color: #ff4d4d; font-size: 12px; margin-top: 10px; }
+        #debug { color: #ff4d4d; font-size: 14px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -20,7 +20,7 @@
         <h2>مرصد الهلال الذكي</h2>
         <input type="number" id="lat" value="30.5" step="any">
         <input type="number" id="lon" value="47.8" step="any">
-        <button onclick="calculate()">احسب البيانات الآن</button>
+        <button onclick="calculateFinal()">احسب البيانات الآن</button>
         <div id="debug"></div>
 
         <div id="results" class="result-box">
@@ -33,7 +33,7 @@
     </div>
 
     <script>
-        function calculate() {
+        function calculateFinal() {
             const debug = document.getElementById('debug');
             const resDiv = document.getElementById('results');
             debug.innerText = "";
@@ -42,33 +42,44 @@
                 const lat = parseFloat(document.getElementById('lat').value);
                 const lon = parseFloat(document.getElementById('lon').value);
                 const observer = new Astronomy.Observer(lat, lon, 0);
-                const date = new Date();
-
-                // حساب الغروب بطريقة يدوية بسيطة
-                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, date, 1);
-                if (!sunset) throw "تعذر العثور على وقت الغروب";
+                
+                // تحديد تاريخ اليوم بدقة
+                const today = new Date();
+                
+                // البحث عن أقرب وقت لغروب الشمس
+                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, today, 1);
+                
+                if (!sunset || !sunset.date) {
+                    throw "لم يتم العثور على بيانات الغروب، جرب تحديث الصفحة";
+                }
 
                 const sunsetDate = sunset.date;
+
+                // حساب المحاق السابق (New Moon)
                 const mq = Astronomy.SearchMoonQuarter(sunsetDate);
-                const newMoonDate = mq.prev.date;
+                const prevNewMoonDate = mq.prev.date;
 
-                const ageMs = sunsetDate.getTime() - newMoonDate.getTime();
-                const hrs = Math.floor(ageMs / 3600000);
-                const mins = Math.floor((ageMs % 3600000) / 60000);
+                // حساب الفرق الزمني (العمر)
+                const diffMs = sunsetDate.getTime() - prevNewMoonDate.getTime();
+                const hrs = Math.floor(diffMs / 3600000);
+                const mins = Math.floor((diffMs % 3600000) / 60000);
 
+                // الحسابات الفلكية الموضعية
                 const moonEquator = Astronomy.Equator(Astronomy.Body.Moon, sunsetDate, observer);
                 const moonHoriz = Astronomy.Horizon(sunsetDate, observer, moonEquator.ra, moonEquator.dec, 'nora');
                 const elong = Astronomy.Elongation(Astronomy.Body.Moon, sunsetDate);
 
+                // عرض النتائج في الواجهة
                 document.getElementById('v-sunset').innerText = sunsetDate.toLocaleTimeString('ar-EG');
-                document.getElementById('v-newmoon').innerText = newMoonDate.toLocaleTimeString('ar-EG');
+                document.getElementById('v-newmoon').innerText = prevNewMoonDate.toLocaleTimeString('ar-EG');
                 document.getElementById('v-age').innerText = hrs + " ساعة و " + mins + " دقيقة";
                 document.getElementById('v-alt').innerText = moonHoriz.alt.toFixed(2) + "°";
                 document.getElementById('v-elong').innerText = elong.angsep.toFixed(2) + "°";
 
                 resDiv.style.display = 'block';
+                
             } catch (e) {
-                debug.innerText = "التفاصيل التقنية للخطأ: " + e;
+                debug.innerText = "حدث خطأ بسيط، يرجى المحاولة مرة أخرى: " + e;
             }
         }
     </script>
