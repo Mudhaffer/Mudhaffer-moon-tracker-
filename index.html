@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرصد الهلال - الإصدار النهائي</title>
+    <title>مرصد الهلال - النسخة الموثوقة</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
-        .card { background: #1a1f2b; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; border: 2px solid #4361ee; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .card { background: #1a1f2b; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; border: 2px solid #4361ee; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
         input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #242c3d; color: white; font-size: 18px; text-align: center; }
-        button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        button:active { background: #3a0ca3; transform: scale(0.98); }
+        button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
         .result-box { margin-top: 20px; text-align: right; background: #242c3d; padding: 15px; border-radius: 10px; display: none; border: 1px solid #4cc9f0; }
         .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }
         #debug { color: #ff4d4d; font-size: 14px; margin-top: 15px; }
@@ -25,10 +24,10 @@
         <div id="debug"></div>
 
         <div id="results" class="result-box">
-            <div class="row"><span>🌅 وقت الغروب اليوم:</span> <span id="v-sunset"></span></div>
-            <div class="row"><span>🌑 المحاق (التولد):</span> <span id="v-newmoon"></span></div>
+            <div class="row"><span>🌅 غروب الشمس:</span> <span id="v-sunset" style="color:#f9d71c"></span></div>
+            <div class="row"><span>🌑 تولد القمر:</span> <span id="v-newmoon"></span></div>
             <div class="row" style="color: #4cc9f0; font-weight: bold;"><span>⏳ عمر الهلال:</span> <span id="v-age"></span></div>
-            <div class="row"><span>📐 الارتفاع عن الأفق:</span> <span id="v-alt"></span></div>
+            <div class="row"><span>📐 الارتفاع:</span> <span id="v-alt"></span></div>
             <div class="row"><span>📏 البعد الزاوي:</span> <span id="v-elong"></span></div>
         </div>
     </div>
@@ -40,23 +39,17 @@
             debug.innerText = "";
             
             try {
-                if (typeof Astronomy === 'undefined') throw "المحرك الفلكي لم يكتمل تحميله، انتظر ثانية";
-
                 const lat = parseFloat(document.getElementById('lat').value);
                 const lon = parseFloat(document.getElementById('lon').value);
                 const observer = new Astronomy.Observer(lat, lon, 0);
-                const now = new Date();
-
-                // البحث عن الغروب القادم خلال 24 ساعة
-                let sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, now, 1);
                 
-                // إذا لم يجد غروباً قادماً، يبحث عن الغروب الذي حدث اليوم
-                if (!sunset || !sunset.date) {
-                    const twelveHoursAgo = new Date(now.getTime() - (12 * 60 * 60 * 1000));
-                    sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, twelveHoursAgo, 1);
-                }
-
-                if (!sunset || !sunset.date) throw "تعذر العثور على وقت الغروب";
+                // البحث عن غروب الشمس (نبدأ البحث من بداية اليوم الحالي)
+                let dayStart = new Date();
+                dayStart.setHours(0,0,0,0);
+                
+                let sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, dayStart, 1);
+                
+                if (!sunset || !sunset.date) throw "يرجى تحديث الصفحة والمحاولة ثانية";
 
                 const sunsetDate = sunset.date;
                 const mq = Astronomy.SearchMoonQuarter(sunsetDate);
@@ -77,9 +70,8 @@
                 document.getElementById('v-elong').innerText = elong.angsep.toFixed(2) + "°";
 
                 resDiv.style.display = 'block';
-
             } catch (e) {
-                debug.innerText = "تنبيه: " + e;
+                debug.innerText = "تنبيه تقني: " + e;
             }
         }
     </script>
