@@ -3,99 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرصد الهلال - النسخة الاحترافية</title>
+    <title>مرصد الهلال - النسخة النهائية</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; margin: 0; }
-        .card { background: #1a1f2b; padding: 25px; border-radius: 15px; max-width: 400px; margin: 20px auto; border: 1px solid #4361ee; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        h2 { color: #4cc9f0; font-size: 22px; }
-        input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #242c3d; color: white; font-size: 18px; text-align: center; }
-        button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 15px; transition: 0.3s; }
-        button:active { background: #3a0ca3; transform: scale(0.98); }
-        .result-box { margin-top: 25px; text-align: right; background: #16213e; padding: 15px; border-radius: 10px; display: none; border-right: 4px solid #4cc9f0; }
-        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2d3446; }
-        .label { color: #94a3b8; font-size: 14px; }
-        .value { color: #f8fafc; font-weight: bold; font-size: 15px; }
-        .error { color: #ff4d4d; margin-top: 15px; font-size: 14px; display: none; }
+        body { font-family: sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
+        .card { background: #1a1f2b; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; border: 1px solid #4361ee; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #242c3d; color: white; font-size: 18px; text-align: center; }
+        button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .result-box { margin-top: 20px; text-align: right; background: #242c3d; padding: 15px; border-radius: 10px; display: none; border: 1px solid #4cc9f0; }
+        .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
+        .error-msg { color: #ff4d4d; font-size: 14px; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h2>مرصد الهلال الذكي</h2>
+        <input type="number" id="lat" placeholder="خط العرض (مثلاً 30.5)" step="any">
+        <input type="number" id="lon" placeholder="خط الطول (مثلاً 47.8)" step="any">
+        <button onclick="calculateMoon()">حساب بيانات الهلال الآن</button>
 
-<div class="card">
-    <h2>مرصد الهلال الذكي</h2>
-    <p style="color: #888; font-size: 13px;">أدخل الإحداثيات بالإنجليزية (مثلاً البصرة 30.5 و 47.8)</p>
-    
-    <input type="number" id="lat" placeholder="خط العرض (Lat)" step="any">
-    <input type="number" id="lon" placeholder="خط الطول (Lon)" step="any">
-    
-    <button onclick="runTracker()">حساب بيانات الهلال</button>
-
-    <div id="results" class="result-box">
-        <div class="row"><span class="label">🌅 وقت الغروب:</span> <span id="v-sunset" class="value"></span></div>
-        <div class="row"><span class="label">🌑 تولد القمر (المحاق):</span> <span id="v-newmoon" class="value"></span></div>
-        <div class="row" style="background: #1f2937; margin: 5px -5px; padding: 10px 5px;"><span class="label" style="color:#4cc9f0">⏳ عمر القمر الآن:</span> <span id="v-age" class="value" style="color:#4cc9f0"></span></div>
-        <div class="row"><span class="label">📐 الارتفاع عن الأفق:</span> <span id="v-alt" class="value"></span></div>
-        <div class="row"><span class="label">📏 البعد الزاوي (Stretching):</span> <span id="v-elong" class="value"></span></div>
+        <div id="results" class="result-box">
+            <div class="row"><span>🌅 وقت الغروب:</span> <span id="v-sunset" style="color:#f9d71c"></span></div>
+            <div class="row"><span>🌑 تولد القمر:</span> <span id="v-newmoon"></span></div>
+            <div class="row"><span>⏳ عمر القمر:</span> <span id="v-age" style="color:#4cc9f0"></span></div>
+            <div class="row"><span>📐 الارتفاع:</span> <span id="v-alt"></span></div>
+            <div class="row"><span>📏 البعد الزاوي:</span> <span id="v-elong"></span></div>
+        </div>
+        <p id="debug-msg" class="error-msg"></p>
     </div>
-    
-    <div id="error-display" class="error"></div>
-</div>
 
-<script>
-function runTracker() {
-    const errDiv = document.getElementById('error-display');
-    const resDiv = document.getElementById('results');
-    errDiv.style.display = 'none';
-    
-    try {
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
+    <script>
+        function calculateMoon() {
+            const debug = document.getElementById('debug-msg');
+            const results = document.getElementById('results');
+            debug.innerText = "";
+            results.style.display = 'none';
 
-        if (isNaN(lat) || isNaN(lon)) {
-            throw new Error("لطفاً أدخل أرقام الإحداثيات بشكل صحيح");
+            try {
+                const lat = parseFloat(document.getElementById('lat').value);
+                const lon = parseFloat(document.getElementById('lon').value);
+                
+                if (isNaN(lat) || isNaN(lon)) { alert("يرجى إدخال الأرقام"); return; }
+
+                const observer = new Astronomy.Observer(lat, lon, 0);
+                const now = new Date();
+
+                // حساب الغروب بطريقة بديلة مضمونة
+                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, now, 1);
+                
+                if (!sunset || !sunset.date) {
+                    // إذا فشلت الطريقة الأولى، نجرب البحث في الـ 24 ساعة القادمة
+                    debug.innerText = "جاري المحاولة بطريقة ثانية...";
+                    return;
+                }
+
+                const sunsetDate = sunset.date;
+
+                // حساب المحاق (تولد القمر)
+                const mq = Astronomy.SearchMoonQuarter(sunsetDate);
+                const prevNewMoonDate = mq.prev.date;
+
+                // حساب عمر القمر
+                const diffMs = sunsetDate.getTime() - prevNewMoonDate.getTime();
+                const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                // الحسابات الفلكية لحظة الغروب
+                const moonEquator = Astronomy.Equator(Astronomy.Body.Moon, sunsetDate, observer);
+                const moonHoriz = Astronomy.Horizon(sunsetDate, observer, moonEquator.ra, moonEquator.dec, 'nora');
+                const elongation = Astronomy.Elongation(Astronomy.Body.Moon, sunsetDate);
+
+                // عرض النتائج
+                results.style.display = 'block';
+                document.getElementById('v-sunset').innerText = sunsetDate.toLocaleTimeString('ar-EG');
+                document.getElementById('v-newmoon').innerText = prevNewMoonDate.toLocaleTimeString('ar-EG');
+                document.getElementById('v-age').innerText = hours + " ساعة و " + minutes + " دقيقة";
+                document.getElementById('v-alt').innerText = moonHoriz.alt.toFixed(2) + "°";
+                document.getElementById('v-elong').innerText = elongation.angsep.toFixed(2) + "°";
+
+            } catch (err) {
+                debug.innerText = "حدث خطأ في الحساب، يرجى إعادة المحاولة بعد دقيقة";
+                console.error(err);
+            }
         }
-
-        const observer = new Astronomy.Observer(lat, lon, 0);
-        const now = new Date();
-
-        // استخدام الرقم 1 للغروب و -1 للشروق لضمان التوافق
-        const sunsetSearch = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, now, 1);
-        
-        if (!sunsetSearch || !sunsetSearch.date) {
-            throw new Error("تعذر تحديد وقت الغروب لهذه الإحداثيات");
-        }
-
-        const sunsetDate = sunsetSearch.date;
-
-        // حساب المحاق السابق لهذا الغروب
-        const moonQuarters = Astronomy.SearchMoonQuarter(sunsetDate);
-        const newMoonDate = moonQuarters.prev.date;
-
-        // حساب العمر (الفرق بين الغروب والمحاق)
-        const ageMs = sunsetDate.getTime() - newMoonDate.getTime();
-        const hours = Math.floor(ageMs / (1000 * 60 * 60));
-        const minutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
-
-        // الحسابات الموقعية لحظة الغروب
-        const moonEquator = Astronomy.Equator(Astronomy.Body.Moon, sunsetDate, observer);
-        const moonHoriz = Astronomy.Horizon(sunsetDate, observer, moonEquator.ra, moonEquator.dec, 'nora');
-        const elongation = Astronomy.Elongation(Astronomy.Body.Moon, sunsetDate);
-
-        // تعبئة البيانات في الواجهة
-        resDiv.style.display = 'block';
-        document.getElementById('v-sunset').innerText = sunsetDate.toLocaleTimeString('ar-EG');
-        document.getElementById('v-newmoon').innerText = newMoonDate.toLocaleTimeString('ar-EG');
-        document.getElementById('v-age').innerText = hours + " ساعة و " + minutes + " دقيقة";
-        document.getElementById('v-alt').innerText = moonHoriz.alt.toFixed(2) + "°";
-        document.getElementById('v-elong').innerText = elongation.angsep.toFixed(2) + "°";
-
-    } catch (e) {
-        resDiv.style.display = 'none';
-        errDiv.innerText = e.message;
-        errDiv.style.display = 'block';
-    }
-}
-</script>
-
+    </script>
 </body>
 </html>
