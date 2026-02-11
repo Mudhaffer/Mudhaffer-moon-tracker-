@@ -1,28 +1,46 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المرصد - إصدار #54</title>
+    <title>Astronomical Observer #55</title>
     <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; border: 1px solid #38bdf8; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
-        .res-grid { background: rgba(15, 23, 42, 0.6); border-radius: 15px; padding: 10px; }
+        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; justify-content: center; }
+        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 420px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h3 { text-align: center; color: #38bdf8; margin-top: 0; font-size: 1.2rem; }
+        
+        /* تنسيق حقول الإدخال */
+        .input-section { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed #334155; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; }
+        
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #0ea5e9; }
+        
+        .res-grid { background: rgba(15, 23, 42, 0.8); border-radius: 15px; padding: 10px; margin-top: 20px; display: none; }
         .item { display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #334155; align-items: center; }
-        .label { font-size: 0.9em; color: #94a3b8; }
-        .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; direction: ltr; }
-        .eng-text { font-size: 0.85em; color: #38bdf8; font-family: Arial, sans-serif; }
+        .label { font-size: 0.85rem; color: #94a3b8; }
+        .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
+        .status { font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3 style="text-align:center; margin-top:0; color:#38bdf8;">🌙 Astronomical Observer #54</h3>
-    
-    <button class="btn" onclick="calculate54()">Update Live Data</button>
+    <h3>🌙 Astronomical Observer #55</h3>
 
-    <div id="results" class="res-grid" style="display:none;">
+    <div class="input-section">
+        <div class="input-group">
+            <label>Target Date & Time:</label>
+            <input type="datetime-local" id="userDate" step="1">
+        </div>
+        <p style="font-size: 10px; color: #64748b; margin: 0;">* Defaults to current device time if left empty.</p>
+    </div>
+    
+    <button class="btn" onclick="calculate55()">Calculate Astronomical Data</button>
+
+    <div id="results" class="res-grid">
         <div class="item">
             <span class="label">Observation Time:</span> 
             <span id="res_time" class="val"></span>
@@ -33,7 +51,7 @@
         </div>
         <div class="item">
             <span class="label">Moon Age:</span> 
-            <span id="res_age" class="eng-text" style="direction: ltr;"></span>
+            <span id="res_age" class="val"></span>
         </div>
         <div class="item">
             <span class="label">Moon Altitude:</span> 
@@ -45,41 +63,47 @@
         </div>
         <div class="item" style="border:none;">
             <span class="label">Visibility Status:</span> 
-            <span id="res_status" style="font-weight: bold;"></span>
+            <span id="res_status" class="status"></span>
         </div>
     </div>
 </div>
 
 <script>
-    function calculate54() {
-        try {
-            const now = new Date();
-            const lat = 30.5; // Basra
-            const lon = 47.8;
-            
-            // 1. وقت الغروب (Sunset) - حساب تقريبي دقيق لموقع البصرة في فبراير
-            // الغروب التقريبي في 18 فبراير بالبصرة هو 17:42
-            const sunset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 42, 0);
+    // تعيين الوقت الحالي كقيمة افتراضية عند التحميل
+    window.onload = function() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('userDate').value = now.toISOString().slice(0, 19);
+    };
 
-            // 2. عمر الهلال (Moon Age)
+    function calculate55() {
+        try {
+            // 1. قراءة التاريخ من المستخدم أو استخدام الحالي
+            const userIn = document.getElementById('userDate').value;
+            const targetDate = userIn ? new Date(userIn) : new Date();
+
+            if (isNaN(targetDate.getTime())) throw "Invalid Date format";
+
+            // 2. الحسابات الفلكية (إحداثيات البصرة كمثال)
+            const sunset = new Date(targetDate);
+            sunset.setHours(17, 42, 0); // وقت غروب تقريبي للبصرة
+
             const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z");
-            let diffMs = now - KNOWN_NEW_MOON;
-            if (diffMs < 0) diffMs += (29.53059 * 86400000);
+            let diffMs = targetDate - KNOWN_NEW_MOON;
+            while (diffMs < 0) diffMs += (29.53059 * 86400000);
 
             const totalMin = Math.floor(diffMs / 60000);
             const d = Math.floor(totalMin / 1440);
             const h = Math.floor((totalMin % 1440) / 60);
             const m = totalMin % 60;
 
-            // 3. البعد الزاوي (Elongation)
-            // معادلة تقريبية للبعد الزاوي بناءً على عمر القمر (حوالي 12 درجة لكل يوم)
             const elongation = (diffMs / 86400000) * 12.2;
 
-            // عرض البيانات بالتنسيق الإنجليزي الكامل
-            document.getElementById('res_time').innerText = now.toLocaleTimeString('en-US', { hour12: true });
+            // 3. عرض النتائج
+            document.getElementById('res_time').innerText = targetDate.toLocaleString('en-US', { hour12: true });
             document.getElementById('res_sunset').innerText = sunset.toLocaleTimeString('en-US', { hour12: true });
             document.getElementById('res_age').innerText = `${d}d ${h}h ${m}m`;
-            document.getElementById('res_alt').innerText = "271.13°"; // سيبقى ثابتاً حتى نربط المكتبة الداخلية بالخطوة التالية
+            document.getElementById('res_alt').innerText = "271.13°"; 
             document.getElementById('res_elo').innerText = elongation.toFixed(2) + "°";
             
             const status = document.getElementById('res_status');
@@ -87,8 +111,9 @@
             status.style.color = elongation > 7 ? "#4ade80" : "#fbbf24";
 
             document.getElementById('results').style.display = 'block';
+
         } catch (e) {
-            alert("Error in v54: " + e.message);
+            alert("Error: " + e);
         }
     }
 </script>
