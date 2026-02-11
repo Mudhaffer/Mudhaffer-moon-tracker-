@@ -3,44 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرصد الهلال الذكي - النسخة المعتمدة</title>
+    <title>مرصد الهلال الذكي - النسخة النهائية</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
-        .card { background: #1a1f2b; padding: 30px; border-radius: 20px; max-width: 450px; margin: auto; border: 1px solid #4361ee; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-        .status-ready { color: #4caf50; font-size: 14px; margin-bottom: 15px; }
-        input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; font-size: 18px; text-align: center; }
-        button { background: #4361ee; color: white; border: none; padding: 18px; width: 85%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; transition: 0.3s; }
-        button:hover { background: #3751d1; }
-        .result-box { margin-top: 25px; text-align: right; background: #242c3d; padding: 20px; border-radius: 15px; display: none; border: 1px solid #4cc9f0; animation: fadeIn 0.5s; }
-        .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #333; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        #error-msg { color: #ff4d4d; margin-top: 15px; font-size: 14px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
+        .card { background: #1a1f2b; padding: 25px; border-radius: 20px; max-width: 420px; margin: auto; border: 1px solid #4361ee; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .header-title { color: #4cc9f0; margin-bottom: 5px; }
+        .status-tag { background: #1b4332; color: #74c69d; padding: 5px 12px; border-radius: 20px; font-size: 12px; display: inline-block; margin-bottom: 20px; }
+        input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; font-size: 18px; text-align: center; }
+        button { background: #4361ee; color: white; border: none; padding: 15px; width: 90%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; transition: 0.3s; }
+        button:hover { background: #3751d1; transform: translateY(-2px); }
+        .result-box { margin-top: 25px; text-align: right; background: #242c3d; padding: 15px; border-radius: 15px; display: none; border: 1px solid #4cc9f0; }
+        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }
+        .row:last-child { border-bottom: none; }
+        .label { color: #8d99ae; }
+        .value { font-weight: bold; color: #fff; }
+        #error-display { color: #ff4d4d; margin-top: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color: #4cc9f0;">🌙 مرصد الهلال الذكي</h2>
-        <div class="status-ready">المحرك الفلكي متصل وجاهز ✅</div>
+        <h2 class="header-title">🌙 مرصد الهلال الذكي</h2>
+        <div class="status-tag">المحرك الفلكي متصل وجاهز ✅</div>
         
         <input type="number" id="lat" value="30.5" step="any">
         <input type="number" id="lon" value="47.8" step="any">
         
-        <button onclick="calculateNow()">حساب بيانات الرؤية</button>
-        <div id="error-msg"></div>
+        <button onclick="calculate()">احسب الآن</button>
+        <div id="error-display"></div>
 
         <div id="results" class="result-box">
-            <div class="row"><span>🌅 وقت الغروب:</span> <span id="v-sunset" style="color:#ffeb3b"></span></div>
-            <div class="row"><span>🌑 ولادة الهلال (المحاق):</span> <span id="v-newmoon"></span></div>
-            <div class="row" style="color: #4cc9f0; font-weight: bold; font-size: 1.1em;"><span>⏳ عمر الهلال:</span> <span id="v-age"></span></div>
-            <div class="row"><span>📐 الارتفاع عن الأفق:</span> <span id="v-alt"></span></div>
-            <div class="row"><span>📏 البعد الزاوي (Elong):</span> <span id="v-elong"></span></div>
+            <div class="row"><span class="label">🌅 وقت الغروب:</span> <span id="v-sunset" class="value" style="color:#ffeb3b"></span></div>
+            <div class="row"><span class="label">🌑 ولادة الهلال:</span> <span id="v-newmoon" class="value"></span></div>
+            <div class="row" style="background: rgba(76, 201, 240, 0.1); border-radius: 8px; padding: 10px;"><span class="label" style="color:#4cc9f0">⏳ عمر الهلال:</span> <span id="v-age" class="value" style="color:#4cc9f0"></span></div>
+            <div class="row"><span class="label">📐 الارتفاع:</span> <span id="v-alt" class="value"></span></div>
+            <div class="row"><span class="label">📏 البعد الزاوي:</span> <span id="v-elong" class="value"></span></div>
         </div>
     </div>
 
     <script>
-        function calculateNow() {
-            const err = document.getElementById('error-msg');
+        function calculate() {
+            const err = document.getElementById('error-display');
             const resDiv = document.getElementById('results');
             err.innerText = "";
             
@@ -49,35 +52,35 @@
                 const lon = parseFloat(document.getElementById('lon').value);
                 const observer = new Astronomy.Observer(lat, lon, 0);
                 
-                // صمام أمان لضمان إيجاد وقت الغروب في أي ساعة من اليوم
-                let searchTime = new Date();
-                searchTime.setHours(6,0,0,0); // نبدأ البحث من صباح اليوم لضمان ثبات النتيجة
+                // البحث عن غروب الشمس (نبدأ من بداية اليوم الحالي لضمان وجود قيمة)
+                let date = new Date();
+                date.setHours(0,0,0,0);
                 
-                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, searchTime, 1);
+                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, date, 1);
                 
-                if (!sunset || !sunset.date) throw "تعذر تحديد وقت الغروب، يرجى إعادة المحاولة";
+                if (!sunset || !sunset.date) throw "فشل في العثور على وقت الغروب";
 
                 const sunsetDate = sunset.date;
-                const mq = Astronomy.SearchMoonQuarter(sunsetDate);
-                const newMoonDate = mq.prev.date;
+                const moonQuarter = Astronomy.SearchMoonQuarter(sunsetDate);
+                const newMoonDate = moonQuarter.prev.date;
 
-                const diffMs = sunsetDate.getTime() - newMoonDate.getTime();
-                const hrs = Math.floor(diffMs / (1000 * 60 * 60));
-                const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                const diff = sunsetDate.getTime() - newMoonDate.getTime();
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
 
-                const moonEquator = Astronomy.Equator(Astronomy.Body.Moon, sunsetDate, observer);
-                const moonHoriz = Astronomy.Horizon(sunsetDate, observer, moonEquator.ra, moonEquator.dec, 'nora');
+                const mEquator = Astronomy.Equator(Astronomy.Body.Moon, sunsetDate, observer);
+                const mHoriz = Astronomy.Horizon(sunsetDate, observer, mEquator.ra, mEquator.dec, 'nora');
                 const elong = Astronomy.Elongation(Astronomy.Body.Moon, sunsetDate);
 
                 document.getElementById('v-sunset').innerText = sunsetDate.toLocaleTimeString('ar-EG');
                 document.getElementById('v-newmoon').innerText = newMoonDate.toLocaleTimeString('ar-EG');
-                document.getElementById('v-age').innerText = hrs + " ساعة و " + mins + " دقيقة";
-                document.getElementById('v-alt').innerText = moonHoriz.alt.toFixed(2) + "°";
+                document.getElementById('v-age').innerText = h + " ساعة و " + m + " دقيقة";
+                document.getElementById('v-alt').innerText = mHoriz.alt.toFixed(2) + "°";
                 document.getElementById('v-elong').innerText = elong.angsep.toFixed(2) + "°";
 
                 resDiv.style.display = 'block';
             } catch (e) {
-                err.innerText = "تنبيه: " + e;
+                err.innerText = "حدث خطأ: " + e;
             }
         }
     </script>
