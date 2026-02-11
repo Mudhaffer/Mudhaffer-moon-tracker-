@@ -2,98 +2,103 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مرصد الهلال - إدخال يدوي مباشر</title>
+    <title>حساب الهلال - يدوي بالكامل</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         body { background: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
         .card { background: #1a1f2b; padding: 25px; border-radius: 20px; max-width: 450px; margin: auto; border: 2px solid #4361ee; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; font-size: 16px; box-sizing: border-box; }
-        button { background: #4361ee; font-weight: bold; cursor: pointer; border: none; }
-        .result-box { margin-top: 20px; text-align: right; background: #0b0e14; padding: 15px; border-radius: 15px; display: none; border-right: 5px solid #4cc9f0; }
+        .input-group { margin: 15px 0; text-align: right; }
+        label { display: block; margin-bottom: 5px; color: #4cc9f0; font-size: 14px; }
+        input, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; font-size: 16px; box-sizing: border-box; }
+        button { background: #4361ee; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; }
+        .result-box { margin-top: 25px; text-align: right; background: #0b0e14; padding: 15px; border-radius: 15px; display: none; border-right: 5px solid #4cc9f0; }
         .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1f2b; }
         .val { color: #ffeb3b; font-weight: bold; }
-        #error-display { color: #ff4d4d; font-size: 13px; margin-top: 10px; display: none; }
+        #err { color: #ff4d4d; margin-top: 10px; font-size: 13px; display: none; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color: #4cc9f0;">🌙 الحساب اليدوي للهلال</h2>
+        <h2>🌙 الحساب اليدوي للهلال</h2>
         
-        <div style="text-align: right; margin-bottom: 5px;">وقت الرصد (الساعة والدقيقة):</div>
-        <input type="datetime-local" id="user-date">
+        <div class="input-group">
+            <label>وقت الرصد (الساعة والدقيقة):</label>
+            <input type="datetime-local" id="user-date">
+        </div>
 
         <div style="display:flex; gap:10px;">
-            <div style="flex:1"> عرض: <input type="number" id="lat" value="30.5"> </div>
-            <div style="flex:1"> طول: <input type="number" id="lon" value="47.8"> </div>
+            <div class="input-group" style="flex:1"> <label>عرض (Lat):</label> <input type="number" id="lat" value="30.5" step="any"> </div>
+            <div class="input-group" style="flex:1"> <label>طول (Lon):</label> <input type="number" id="lon" value="47.8" step="any"> </div>
         </div>
         
-        <button onclick="calculateNow()">احسب البيانات المدخلة</button>
-        <div id="error-display"></div>
+        <button onclick="calculate()">احسب البيانات المدخلة</button>
+        <div id="err"></div>
 
         <div id="results" class="result-box">
-            <div class="row"><span>📅 الوقت المعتمد:</span> <span id="r1" class="val"></span></div>
-            <div class="row"><span>🌑 ولادة الهلال (التقريبية):</span> <span id="r2" class="val"></span></div>
+            <div class="row"><span>📅 وقت الرصد:</span> <span id="r1" class="val"></span></div>
+            <div class="row"><span>🌑 ولادة الهلال (النيومون):</span> <span id="r2" class="val"></span></div>
             <div class="row" style="background: rgba(67, 97, 238, 0.1);"><span>⏳ عمر الهلال:</span> <span id="r3" class="val" style="color:#4cc9f0"></span></div>
             <div class="row"><span>📐 الارتفاع عن الأفق:</span> <span id="r4" class="val"></span></div>
-            <div class="row"><span>📏 البعد الزاوي:</span> <span id="r5" class="val"></span></div>
+            <div class="row"><span>📏 البعد الزاوي (الاستطالة):</span> <span id="r5" class="val"></span></div>
         </div>
     </div>
 
     <script>
-        // ضبط التاريخ الحالي تلقائياً عند الفتح
+        // تعيين الوقت الحالي كافتراضي
         window.onload = function() {
             let n = new Date();
             n.setMinutes(n.getMinutes() - n.getTimezoneOffset());
             document.getElementById('user-date').value = n.toISOString().slice(0, 16);
         };
 
-        function calculateNow() {
-            const errDiv = document.getElementById('error-display');
-            const resDiv = document.getElementById('results');
-            errDiv.style.display = 'none';
+        function calculate() {
+            const err = document.getElementById('err');
+            const res = document.getElementById('results');
+            err.style.display = 'none';
 
             try {
                 const lat = parseFloat(document.getElementById('lat').value);
                 const lon = parseFloat(document.getElementById('lon').value);
                 const observer = new Astronomy.Observer(lat, lon, 0);
-                
-                // قراءة التاريخ من الخانة يدوياً
-                const selectedDate = new Date(document.getElementById('user-date').value);
-                
-                if (isNaN(selectedDate.getTime())) throw "التاريخ غير صحيح";
+                const date = new Date(document.getElementById('user-date').value);
 
-                // 1. حساب موقع القمر مباشرة (الارتفاع والاستطالة)
-                const equ = Astronomy.Equator(Astronomy.Body.Moon, selectedDate, observer);
-                const hor = Astronomy.Horizon(selectedDate, observer, equ.ra, equ.dec, 'nora');
-                const elo = Astronomy.Elongation(Astronomy.Body.Moon, selectedDate);
+                if (isNaN(date.getTime())) throw "التاريخ غير صحيح";
 
-                // 2. حساب عمر القمر (البحث عن المحاق السابق بطريقة آمنة)
-                // نبحث عن أقرب "نيومون" قبل التاريخ المختار بـ 30 يوماً
-                let searchStart = new Date(selectedDate.getTime() - (30 * 24 * 60 * 60 * 1000));
-                let moonQuarter = Astronomy.SearchMoonQuarter(searchStart);
+                // 1. حساب الموقع (تم تصحيح خيار الانكسار ليكون boolean صريح)
+                const equ = Astronomy.Equator(Astronomy.Body.Moon, date, observer);
+                // القيمة الخامسة (false) تمنع خطأ "Value is not boolean"
+                const hor = Astronomy.Horizon(date, observer, equ.ra, equ.dec, false);
+                const elo = Astronomy.Elongation(Astronomy.Body.Moon, date);
+
+                // 2. حساب المحاق (نيومون) السابق بطريقة أكثر استقراراً
+                // نبدأ البحث من 30 يوماً قبل التاريخ المختار لضمان وجود محاق
+                let searchStart = new Date(date.getTime() - (30 * 24 * 60 * 60 * 1000));
+                let mq = Astronomy.SearchMoonQuarter(searchStart);
                 
-                // التأكد من الوصول لأقرب محاق (quarter index 0) يسبق التاريخ المختار
-                let lastNewMoonDate = moonQuarter.date;
-                // إذا كان المحاق المكتشف بعد التاريخ المختار، نعتمد تقدير تقريبي للعمر لمنع الخطأ
-                if (lastNewMoonDate > selectedDate) {
-                    lastNewMoonDate = new Date(selectedDate.getTime() - (29.5 * 24 * 60 * 60 * 1000));
+                // التكرار للعثور على أقرب محاق (Index 0) يسبق تاريخ الرصد
+                let lastNewMoonDate = mq.date;
+                while (mq && mq.date < date) {
+                    lastNewMoonDate = mq.date;
+                    mq = Astronomy.SearchMoonQuarter(new Date(mq.date.getTime() + 1000));
+                    if (mq.quarter !== 0) continue; // نريد فقط المحاق
+                    if (mq.date > date) break;
                 }
 
-                const diff = selectedDate - lastNewMoonDate;
+                const diff = date - lastNewMoonDate;
                 const h = Math.floor(diff / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
 
-                // عرض النتائج
-                document.getElementById('r1').innerText = selectedDate.toLocaleString('ar-EG');
+                // تعبئة الواجهة
+                document.getElementById('r1').innerText = date.toLocaleString('ar-EG');
                 document.getElementById('r2').innerText = lastNewMoonDate.toLocaleString('ar-EG');
                 document.getElementById('r3').innerText = h + " ساعة و " + m + " دقيقة";
                 document.getElementById('r4').innerText = hor.alt.toFixed(2) + "°";
                 document.getElementById('r5').innerText = elo.angsep.toFixed(2) + "°";
 
-                resDiv.style.display = 'block';
+                res.style.display = 'block';
             } catch (e) {
-                errDiv.innerText = "حدث خطأ في الحساب: " + e;
-                errDiv.style.display = 'block';
+                err.innerText = "خطأ في الحساب: " + e;
+                err.style.display = 'block';
             }
         }
     </script>
