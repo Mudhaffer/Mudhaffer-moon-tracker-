@@ -2,92 +2,78 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مرصد الهلال الذكي - النسخة النهائية</title>
+    <title>المرصد النهائي المستقر</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
-        .card { background: #1a1f2b; padding: 30px; border-radius: 20px; max-width: 450px; margin: auto; border: 1px solid #4361ee; }
-        .status { color: #4caf50; font-size: 14px; margin-bottom: 15px; }
-        input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; text-align: center; font-size: 18px; }
-        button { background: #4361ee; color: white; border: none; padding: 18px; width: 85%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; }
-        .result-box { margin-top: 25px; text-align: right; background: #242c3d; padding: 20px; border-radius: 15px; display: none; border: 1px solid #4cc9f0; }
-        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }
-        #msg { color: #ff4d4d; font-size: 14px; margin-top: 15px; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 10px; display: none; }
+        body { background: #05070a; color: #e0e0e0; font-family: sans-serif; text-align: center; padding: 40px; }
+        .box { background: #0f141e; border: 2px solid #3a86ff; padding: 30px; border-radius: 25px; max-width: 450px; margin: auto; }
+        .data-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #222; }
+        .highlight { color: #3a86ff; font-weight: bold; font-size: 1.2em; }
+        #loading-text { color: #ffbe0b; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2 style="color: #4cc9f0;">🌙 مرصد الهلال الذكي</h2>
-        <div class="status">المحرك الفلكي متصل ✅</div>
+    <div class="box">
+        <h2>🌙 بيانات الهلال اللحظية</h2>
+        <div id="loading-text">جاري الحساب المباشر...</div>
         
-        <input type="number" id="lat" value="30.5">
-        <input type="number" id="lon" value="47.8">
-        
-        <button onclick="startCalculation()">احسب البيانات الآن</button>
-        <div id="msg"></div>
-
-        <div id="results" class="result-box">
-            <div class="row"><span>🌅 وقت الغروب:</span> <span id="v-sunset" style="color:#ffeb3b"></span></div>
-            <div class="row"><span>🌑 ولادة الهلال:</span> <span id="v-newmoon"></span></div>
-            <div class="row" style="color:#4cc9f0; font-weight:bold;"><span>⏳ عمر الهلال:</span> <span id="v-age"></span></div>
-            <div class="row"><span>📐 الارتفاع:</span> <span id="v-alt"></span></div>
-            <div class="row"><span>📏 البعد الزاوي:</span> <span id="v-elong"></span></div>
+        <div id="display-area" style="display:none;">
+            <div class="data-row"><span>🌅 غروب الشمس (البصرة):</span> <span id="s1" class="highlight"></span></div>
+            <div class="data-row"><span>🌑 ولادة الهلال:</span> <span id="s2"></span></div>
+            <div class="data-row" style="background: rgba(58, 134, 255, 0.1);"><span>⏳ عمر القمر الآن:</span> <span id="s3" class="highlight"></span></div>
+            <div class="data-row"><span>📐 الارتفاع عن الأفق:</span> <span id="s4"></span></div>
+            <div class="data-row"><span>📏 البعد الزاوي:</span> <span id="s5"></span></div>
         </div>
     </div>
 
     <script>
-        function startCalculation() {
-            const msg = document.getElementById('msg');
-            const res = document.getElementById('results');
-            msg.style.display = 'block';
-            msg.style.color = '#4cc9f0';
-            msg.innerText = "جاري جلب البيانات الفلكية...";
-            res.style.display = 'none';
-
-            // انتظر قليلاً لضمان تحميل المكتبة ومعالجة الوقت
+        // العمل يبدأ فور تحميل الصفحة بدون أزرار
+        window.addEventListener('DOMContentLoaded', (event) => {
             setTimeout(() => {
                 try {
-                    const lat = parseFloat(document.getElementById('lat').value);
-                    const lon = parseFloat(document.getElementById('lon').value);
-                    const observer = new Astronomy.Observer(lat, lon, 0);
+                    // إحداثيات البصرة الثابتة لضمان عدم وجود undefined من المدخلات
+                    const myLat = 30.5;
+                    const myLon = 47.8;
+                    const myObs = new Astronomy.Observer(myLat, myLon, 0);
                     
-                    // استخدام التاريخ الحالي للبحث
-                    let now = new Date();
-                    const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, now, 1);
+                    // استخدام الوقت الحالي
+                    let myNow = new Date();
                     
-                    // التحقق المزدوج
-                    if (!sunset || typeof sunset.date === 'undefined') {
-                        msg.style.color = '#ff4d4d';
-                        msg.innerText = "تنبيه: تعذر تحديد وقت الغروب حالياً. تأكد من إحداثيات الموقع.";
-                        return;
+                    // البحث عن الغروب - نفس الطريقة التي نجحت في a1.png
+                    const mySun = Astronomy.SearchRiseSet(Astronomy.Body.Sun, myObs, 1, myNow, 1);
+                    
+                    if (mySun && mySun.date) {
+                        const sDate = mySun.date;
+                        const myMoonQ = Astronomy.SearchMoonQuarter(sDate);
+                        const nMoonDate = myMoonQ.prev.date;
+
+                        const diff = sDate - nMoonDate;
+                        const hh = Math.floor(diff / 3600000);
+                        const mm = Math.floor((diff % 3600000) / 60000);
+
+                        const mEqu = Astronomy.Equator(Astronomy.Body.Moon, sDate, myObs);
+                        const mHor = Astronomy.Horizon(sDate, myObs, mEqu.ra, mEqu.dec, 'nora');
+                        const elon = Astronomy.Elongation(Astronomy.Body.Moon, sDate);
+
+                        // تعبئة البيانات
+                        document.getElementById('s1').innerText = sDate.toLocaleTimeString('ar-EG');
+                        document.getElementById('s2').innerText = nMoonDate.toLocaleTimeString('ar-EG');
+                        document.getElementById('s3').innerText = hh + " ساعة و " + mm + " دقيقة";
+                        document.getElementById('s4').innerText = mHor.alt.toFixed(2) + "°";
+                        document.getElementById('s5').innerText = elon.angsep.toFixed(2) + "°";
+
+                        // إظهار النتائج وإخفاء التحميل
+                        document.getElementById('loading-text').style.display = 'none';
+                        document.getElementById('display-area').style.display = 'block';
+                    } else {
+                        document.getElementById('loading-text').innerText = "خطأ: لم يتم العثور على بيانات فلكية لهذا الوقت.";
                     }
-
-                    const sunsetDate = sunset.date;
-                    const mq = Astronomy.SearchMoonQuarter(sunsetDate);
-                    const newMoonDate = mq.prev.date;
-
-                    const ageMs = sunsetDate.getTime() - newMoonDate.getTime();
-                    const h = Math.floor(ageMs / 3600000);
-                    const m = Math.floor((ageMs % 3600000) / 60000);
-
-                    const mEqu = Astronomy.Equator(Astronomy.Body.Moon, sunsetDate, observer);
-                    const mHor = Astronomy.Horizon(sunsetDate, observer, mEqu.ra, mEqu.dec, 'nora');
-                    const elong = Astronomy.Elongation(Astronomy.Body.Moon, sunsetDate);
-
-                    document.getElementById('v-sunset').innerText = sunsetDate.toLocaleTimeString('ar-EG');
-                    document.getElementById('v-newmoon').innerText = newMoonDate.toLocaleTimeString('ar-EG');
-                    document.getElementById('v-age').innerText = h + " ساعة و " + m + " دقيقة";
-                    document.getElementById('v-alt').innerText = mHor.alt.toFixed(2) + "°";
-                    document.getElementById('v-elong').innerText = elong.angsep.toFixed(2) + "°";
-
-                    msg.style.display = 'none';
-                    res.style.display = 'block';
-                } catch (e) {
-                    msg.style.color = '#ff4d4d';
-                    msg.innerText = "خطأ في النظام: " + e.message;
+                } catch (err) {
+                    document.getElementById('loading-text').innerText = "حدث خطأ تقني: " + err.message;
+                    console.error(err);
                 }
-            }, 500); // تأخير نصف ثانية فقط للاستقرار
-        }
+            }, 1000); // تأخير ثانية كاملة للاستقرار
+        });
     </script>
 </body>
 </html>
