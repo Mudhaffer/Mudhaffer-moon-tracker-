@@ -3,57 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basra Moon Tracker #59</title>
+    <title>Professional Observer #60</title>
     <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 420px; border: 1px solid #38bdf8; }
-        h3 { text-align: center; color: #38bdf8; margin-top: 0; }
-        .input-section { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed #334155; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 15px; display: flex; justify-content: center; }
+        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 440px; border: 1px solid #38bdf8; }
+        h3 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
+        
+        .section { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        
+        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; }
+        input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; }
+        
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .res-grid { background: rgba(15, 23, 42, 0.8); border-radius: 15px; padding: 10px; margin-top: 20px; }
-        .item { display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #334155; align-items: center; }
-        .label { font-size: 0.85rem; color: #94a3b8; }
-        .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
+        .item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #334155; align-items: center; }
+        .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; font-size: 0.95rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3>🌙 Basra Moon Tracker #59</h3>
+    <h3>🌙 Precise Moon Tracker #60</h3>
 
-    <div class="input-section">
-        <label style="display:block; font-size:0.8rem; color:#94a3b8; margin-bottom:5px;">Select Target Date & Time:</label>
+    <div class="section">
+        <label>Observation Date & Time:</label>
         <input type="datetime-local" id="userDate" step="1">
     </div>
+
+    <div class="section">
+        <label>Location Coordinates (Default: Basra):</label>
+        <div class="grid-inputs">
+            <div>
+                <label>Latitude (N)</label>
+                <input type="number" id="lat" value="30.5" step="0.01">
+            </div>
+            <div>
+                <label>Longitude (E)</label>
+                <input type="number" id="lon" value="47.8" step="0.01">
+            </div>
+        </div>
+    </div>
     
-    <button class="btn" onclick="calculate59()">Calculate Data (#59)</button>
+    <button class="btn" onclick="calculate60()">Calculate Data (#60)</button>
 
     <div id="results" class="res-grid" style="display:none;">
-        <div class="item">
-            <span class="label">Target Date:</span> 
-            <span id="res_date" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Sunset Time:</span> 
-            <span id="res_sunset" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Moon Age:</span> 
-            <span id="res_age" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Moon Altitude:</span> 
-            <span id="res_alt" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Elongation:</span> 
-            <span id="res_elo" class="val"></span>
-        </div>
-        <div class="item" style="border:none;">
-            <span class="label">Visibility:</span> 
-            <span id="res_status" style="font-weight:bold;"></span>
-        </div>
+        <div class="item"><span>Target Date:</span> <span id="res_date" class="val"></span></div>
+        <div class="item"><span>Sunset Time:</span> <span id="res_sunset" class="val"></span></div>
+        <div class="item"><span>Moon Age:</span> <span id="res_age" class="val"></span></div>
+        <div class="item"><span>Moon Altitude:</span> <span id="res_alt" class="val"></span></div>
+        <div class="item"><span>Elongation:</span> <span id="res_elo" class="val"></span></div>
+        <div class="item" style="border:none;"><span>Visibility:</span> <span id="res_status" style="font-weight:bold;"></span></div>
     </div>
 </div>
 
@@ -64,18 +64,24 @@
         document.getElementById('userDate').value = now.toISOString().slice(0, 19);
     };
 
-    function calculate59() {
+    function calculate60() {
         try {
             const userIn = document.getElementById('userDate').value;
-            if (!userIn) return;
             const targetDate = new Date(userIn);
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lon = parseFloat(document.getElementById('lon').value);
 
-            // حسابات النسخة المستقرة #56
+            // 1. حساب وقت الغروب (Sunset) بناءً على خط الطول
+            // الغروب في البصرة (47.8E) يسبق التوقيت العالمي بحوالي 3 ساعات و11 دقيقة فلكياً
             const dayOfYear = Math.floor((targetDate - new Date(targetDate.getFullYear(), 0, 0)) / 86400000);
-            const sunsetHour = 17.7 + (Math.sin((dayOfYear - 80) * 2 * Math.PI / 365) * 0.45); 
+            const sunsetBase = 17.65; // مرجع تقريبي لشهر فبراير
+            const lonCorrection = (47.8 - lon) * (4/60); // تصحيح 4 دقائق لكل درجة خط طول
+            const sunsetHour = sunsetBase + lonCorrection;
+            
             const sunsetDate = new Date(targetDate);
             sunsetDate.setHours(Math.floor(sunsetHour), (sunsetHour % 1 * 60), 0);
 
+            // 2. حساب عمر القمر (Moon Age)
             const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z");
             let diffMs = targetDate - KNOWN_NEW_MOON;
             const cycleMs = 29.53059 * 86400000;
@@ -85,18 +91,19 @@
             const h = Math.floor((diffMs % 86400000) / 3600000);
             const m = Math.floor((diffMs % 3600000) / 60000);
 
+            // 3. الحسابات الزاوية (Altitude & Elongation)
             const elongation = (diffMs / 86400000) * 12.19;
-            const timeFromSunset = (targetDate - sunsetDate) / 3600000;
-            const altitude = 1.1 + (diffMs / 86400000 * 5) - (Math.abs(timeFromSunset) * 12);
+            const timeDiff = (targetDate - sunsetDate) / 3600000;
+            // معادلة ارتفاع محسنة: الارتفاع يتأثر بفرق الوقت عن الغروب وبالبعد الزاوي
+            let altitude = (elongation * 0.7) - (timeDiff * 12);
 
-            // التعديل المطلوب: اليوم ثم اسم الشهر ثم السنة
+            // 4. تنسيق التاريخ (Day Month Year)
             const day = targetDate.getDate();
             const month = targetDate.toLocaleString('en-US', { month: 'long' });
             const year = targetDate.getFullYear();
             const timeStr = targetDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             
             document.getElementById('res_date').innerText = `${day} ${month} ${year}, ${timeStr}`;
-            
             document.getElementById('res_sunset').innerText = sunsetDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             document.getElementById('res_age').innerText = `${d}d ${h}h ${m}m`;
             document.getElementById('res_alt').innerText = altitude.toFixed(2) + "°";
@@ -108,7 +115,7 @@
             status.style.color = isVisible ? "#4ade80" : "#fbbf24";
 
             document.getElementById('results').style.display = 'block';
-        } catch (e) { alert("Error: " + e.message); }
+        } catch (e) { alert("Input Error: Check coordinates"); }
     }
 </script>
 
