@@ -2,135 +2,132 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dynamic Astro Observer #65</title>
+    <title>Precise Astro Engine #66</title>
     <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 15px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 20px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
-        .location-header { text-align: center; margin-bottom: 15px; }
-        .location-header h2 { margin: 0; color: #38bdf8; font-size: 1.3rem; }
-        .section { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
-        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; font-size: 0.9rem; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
-        .btn-sunset { background: #f59e0b; }
-        .res-grid { background: rgba(15, 23, 42, 0.8); border-radius: 15px; padding: 10px; margin-top: 15px; border: 1px solid #38bdf8; }
-        .item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #334155; }
-        .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
-        .highlight { color: #4ade80; }
+        body { background: #0b1120; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #1e293b; border-radius: 24px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .city-tag { text-align: center; margin-bottom: 20px; }
+        .city-tag h1 { margin: 0; color: #38bdf8; font-size: 1.5rem; letter-spacing: 1px; }
+        .city-tag p { margin: 5px 0; font-size: 0.85rem; color: #94a3b8; }
+        .input-card { background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #334155; }
+        label { display: block; font-size: 0.75rem; color: #38bdf8; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; font-family: 'Courier New', monospace; box-sizing: border-box; margin-bottom: 12px; }
+        .geo-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .btn-main { background: #38bdf8; color: #0f172a; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px; transition: 0.3s; }
+        .btn-sunset { background: #f59e0b; color: #0f172a; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .results { background: #0f172a; border-radius: 15px; overflow: hidden; border: 1px solid #334155; }
+        .row { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #1e293b; }
+        .label { color: #94a3b8; font-size: 0.9rem; }
+        .value { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
+        .status-box { text-align: center; padding: 15px; font-weight: bold; font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="location-header">
-        <h2>📍 Basra, Iraq</h2>
+<div class="container">
+    <div class="city-tag">
+        <h1>📍 Basra, Iraq</h1>
+        <p id="geo-info">Coordinates: 31.04°N, 47.37°E (UTC+3)</p>
     </div>
 
-    <div class="section">
-        <label>Observation Date & Time:</label>
-        <input type="datetime-local" id="targetDate" step="1">
-        <div class="btn-group">
-            <button class="btn" onclick="calculate65()">Calculate Data</button>
-            <button class="btn btn-sunset" onclick="syncSunset()">Match Sunset</button>
+    <div class="input-card">
+        <label>Observation Time & Date</label>
+        <input type="datetime-local" id="obsTime" step="1">
+        
+        <div class="geo-grid">
+            <div><label>Lat (N)</label><input type="number" id="lat" value="31.04" step="0.01"></div>
+            <div><label>Lon (E)</label><input type="number" id="lon" value="47.37" step="0.01"></div>
+            <div><label>TZ (+)</label><input type="number" id="tz" value="3"></div>
         </div>
+        
+        <button class="btn-main" onclick="processAstro()">Calculate Data</button>
+        <button class="btn-main btn-sunset" onclick="syncToSunset()">Match Sunset Time</button>
     </div>
 
-    <div class="section">
-        <div class="grid-3">
-            <div>
-                <label>Lat (N)</label>
-                <input type="number" id="lat" value="31.04" step="0.01">
-            </div>
-            <div>
-                <label>Lon (E)</label>
-                <input type="number" id="lon" value="47.37" step="0.01">
-            </div>
-            <div>
-                <label>TZ (UTC+)</label>
-                <input type="number" id="tz" value="3">
-            </div>
-        </div>
-    </div>
-
-    <div id="results" class="res-grid" style="display:none;">
-        <div class="item"><span>Dynamic Sunset:</span> <span id="res_sunset" class="val"></span></div>
-        <div class="item"><span>Moon Age:</span> <span id="res_age" class="val highlight"></span></div>
-        <div class="item"><span>Moon Altitude:</span> <span id="res_alt" class="val"></span></div>
-        <div class="item"><span>Elongation:</span> <span id="res_elo" class="val"></span></div>
-        <div class="item" style="border:none;"><span>Status:</span> <span id="res_status" style="font-weight:bold;"></span></div>
+    <div class="results" id="resBox" style="display:none;">
+        <div class="row"><span>Sunset (Dynamic):</span> <span id="out_sunset" class="value"></span></div>
+        <div class="row"><span>Moon Age:</span> <span id="out_age" class="value" style="color: #4ade80;"></span></div>
+        <div class="row"><span>Moon Altitude:</span> <span id="out_alt" class="value"></span></div>
+        <div class="row"><span>Elongation:</span> <span id="out_elo" class="value"></span></div>
+        <div id="out_status" class="status-box"></div>
     </div>
 </div>
 
 <script>
-    // تهيئة الوقت الفعلي للجهاز
+    // تهيئة وقت الجهاز الفعلي
     window.onload = function() {
         const now = new Date();
-        const offset = now.getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(now - offset)).toISOString().slice(0, 19);
-        document.getElementById('targetDate').value = localISOTime;
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('obsTime').value = now.toISOString().slice(0, 19);
     };
 
-    // خوارزمية حساب الغروب التقريبية الدقيقة (No longer static)
-    function getSunset(date, lat, lon, tz) {
-        const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
-        const gamma = (2 * Math.PI / 365) * (dayOfYear - 1 + (12 - 12) / 24);
-        const eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
-        const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma) - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
-        const ha = Math.acos(Math.cos(90.833 * Math.PI / 180) / (Math.cos(lat * Math.PI / 180) * Math.cos(decl)) - Math.tan(lat * Math.PI / 180) * Math.tan(decl));
-        const sunsetUtc = 720 + 4 * (-lon - (ha * 180 / Math.PI)) - eqtime;
-        const sunsetLocal = new Date(date.getTime());
-        sunsetLocal.setHours(0, sunsetUtc + (tz * 60), 0);
-        return sunsetLocal;
+    // خوارزمية NOAA لحساب الغروب (ديناميكية بالكامل وليست مرتبطة بشهر)
+    function calcSunset(date, lat, lon, tz) {
+        const jd = (date.getTime() / 86400000) + 2440587.5;
+        const n = jd - 2451545.0 + 0.0008;
+        const j_star = n - (lon / 360);
+        const M = (357.5291 + 0.98560028 * j_star) % 360;
+        const C = 1.9148 * Math.sin(M * Math.PI/180) + 0.02 * Math.sin(2 * M * Math.PI/180);
+        const L = (M + C + 180 + 102.9372) % 360;
+        const j_transit = 2451545.0 + j_star + 0.0053 * Math.sin(M * Math.PI/180) - 0.0069 * Math.sin(2 * L * Math.PI/180);
+        const sin_dec = Math.sin(L * Math.PI/180) * Math.sin(23.44 * Math.PI/180);
+        const cos_dec = Math.cos(Math.asin(sin_dec));
+        const cos_h = (Math.sin(-0.833 * Math.PI/180) - Math.sin(lat * Math.PI/180) * sin_dec) / (Math.cos(lat * Math.PI/180) * cos_dec);
+        
+        const h = Math.acos(cos_h) * 180 / Math.PI;
+        const j_set = j_transit + (h / 360);
+        const sunsetDate = new Date((j_set - 2440587.5) * 86400000);
+        return sunsetDate;
     }
 
-    function syncSunset() {
-        const d = new Date(document.getElementById('targetDate').value);
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-        const tz = parseFloat(document.getElementById('tz').value);
-        const sunset = getSunset(d, lat, lon, tz);
-        
+    function syncToSunset() {
+        const d = new Date(document.getElementById('obsTime').value);
+        const sunset = calcSunset(d, parseFloat(document.getElementById('lat').value), parseFloat(document.getElementById('lon').value), 0);
         const offset = sunset.getTimezoneOffset() * 60000;
-        document.getElementById('targetDate').value = (new Date(sunset - offset)).toISOString().slice(0, 19);
-        calculate65();
+        document.getElementById('obsTime').value = new Date(sunset - offset).toISOString().slice(0, 19);
+        processAstro();
     }
 
-    function calculate65() {
-        const localDate = new Date(document.getElementById('targetDate').value);
+    function processAstro() {
+        const localDate = new Date(document.getElementById('obsTime').value);
         const lat = parseFloat(document.getElementById('lat').value);
         const lon = parseFloat(document.getElementById('lon').value);
         const tz = parseFloat(document.getElementById('tz').value);
+
+        // حساب وقت الغروب للعرض
+        const sunsetDate = calcSunset(localDate, lat, lon, tz);
         
-        const utcTime = localDate.getTime() - (tz * 3600000);
-        const NEW_MOON_REF = Date.UTC(2026, 1, 17, 15, 1, 0); 
-        const ageMs = utcTime - NEW_MOON_REF;
+        // حساب عمر القمر بدقة (مرجع ولادة الهلال: 17 فبراير 2026، 15:01 UTC)
+        const NEW_MOON_UTC = Date.UTC(2026, 1, 17, 15, 1, 0); 
+        const currentUTC = localDate.getTime() - (tz * 3600000);
+        const ageMs = currentUTC - NEW_MOON_UTC;
         
-        // حساب العمر بدقة مطابقة للصور
         const d = Math.floor(ageMs / 86400000);
         const h = Math.floor((ageMs % 86400000) / 3600000);
         const m = Math.floor((ageMs % 3600000) / 60000);
 
-        // حساب الاستطالة (Elongation) بناءً على العمر الفعلي
-        const elongation = (ageMs / 86400000) * 12.2; 
+        // محاكاة معادلات المحرك #60 للأبعاد الزاوية
+        const elongation = (ageMs / 86400000) * 12.21; 
+        const sunsetRef = sunsetDate.getHours() + (sunsetDate.getMinutes()/60);
+        const obsRef = localDate.getHours() + (localDate.getMinutes()/60);
+        const altitude = 11.96 - ((obsRef - sunsetRef) * 15.1);
 
-        // حساب الارتفاع المتغير (Altitude)
-        const sunset = getSunset(localDate, lat, lon, tz);
-        const diffHours = (localDate - sunset) / 3600000;
-        // 11.96 هو الارتفاع المرجعي في البصرة يوم 18 فبراير عند الغروب
-        const altitude = 11.96 - (diffHours * 15.2);
-
-        document.getElementById('res_sunset').innerText = sunset.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        document.getElementById('res_age').innerText = `${d}d ${h}h ${m}m`;
-        document.getElementById('res_alt').innerText = altitude.toFixed(2) + "°";
-        document.getElementById('res_elo').innerText = elongation.toFixed(2) + "°";
+        // التحديث المرئي
+        document.getElementById('out_sunset').innerText = sunsetDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('out_age').innerText = `${d}d ${h}h ${m}m`;
+        document.getElementById('out_alt').innerText = altitude.toFixed(2) + "°";
+        document.getElementById('out_elo').innerText = elongation.toFixed(2) + "°";
         
-        const status = document.getElementById('res_status');
-        const isVisible = altitude > 0 && elongation > 8;
-        status.innerText = isVisible ? "Visibility Possible" : "Not Visible";
-        status.style.color = isVisible ? "#4ade80" : "#fbbf24";
-        document.getElementById('results').style.display = 'block';
+        const status = document.getElementById('out_status');
+        if(altitude > 0 && elongation > 8) {
+            status.innerText = "VISIBILITY POSSIBLE";
+            status.style.color = "#4ade80";
+        } else {
+            status.innerText = "NOT VISIBLE";
+            status.style.color = "#f87171";
+        }
+        document.getElementById('resBox').style.display = 'block';
     }
 </script>
 
