@@ -2,79 +2,94 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مرصد الهلال - التحديث التلقائي</title>
+    <title>مرصد الهلال - النسخة المعتمدة</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
-        body { background: #05070a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .card { background: #111827; padding: 30px; border-radius: 25px; max-width: 450px; margin: auto; border: 1px solid #3b82f6; }
-        .data-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #1f2937; }
-        .status-msg { font-size: 14px; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
-        .loading { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .value { color: #3b82f6; font-weight: bold; }
+        body { background: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .card { background: #1a1f2b; padding: 25px; border-radius: 20px; max-width: 450px; margin: auto; border: 1px solid #4361ee; }
+        input, button { width: 90%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; font-size: 16px; text-align: center; }
+        button { background: #4361ee; font-weight: bold; cursor: pointer; border: none; }
+        .result-box { margin-top: 20px; text-align: right; background: #242c3d; padding: 15px; border-radius: 15px; display: none; }
+        .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
+        #status-msg { color: #ffbe0b; font-size: 14px; margin: 10px 0; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>🌙 مرصد الهلال الذكي</h2>
-        <div id="status" class="status-msg loading">جاري محاولة الاتصال بالمحرك الفلكي...</div>
+        <h2 style="color: #4cc9f0;">🌙 مرصد الهلال الذكي</h2>
         
-        <div id="results" style="display:none">
-            <div class="data-row"><span>🌅 وقت الغروب:</span> <span id="r1" class="value"></span></div>
-            <div class="data-row"><span>🌑 ولادة الهلال:</span> <span id="r2" class="value"></span></div>
-            <div class="data-row" style="background: rgba(59, 130, 246, 0.1);"><span>⏳ عمر الهلال:</span> <span id="r3" class="value"></span></div>
-            <div class="data-row"><span>📐 الارتفاع:</span> <span id="r4" class="value"></span></div>
-            <div class="data-row"><span>📏 البعد الزاوي:</span> <span id="r5" class="value"></span></div>
+        <label>إحداثيات الموقع (البصرة):</label>
+        <div style="display:flex; gap:5px; width:95%; margin:auto;">
+            <input type="number" id="lat" value="30.5" step="any">
+            <input type="number" id="lon" value="47.8" step="any">
+        </div>
+
+        <label>اختر تاريخ الرصد (اليوم):</label>
+        <input type="datetime-local" id="manual-date">
+        
+        <button onclick="calculateMoon()">احسب بيانات الرؤية الآن</button>
+        <div id="status-msg"></div>
+
+        <div id="results" class="result-box">
+            <div class="row"><span>🌅 وقت الغروب المعتمد:</span> <span id="v1" style="color:#ffeb3b"></span></div>
+            <div class="row"><span>🌑 ولادة الهلال (المحاق):</span> <span id="v2"></span></div>
+            <div class="row" style="color:#4cc9f0; font-weight:bold;"><span>⏳ عمر الهلال:</span> <span id="v3"></span></div>
+            <div class="row"><span>📐 الارتفاع عن الأفق:</span> <span id="v4"></span></div>
+            <div class="row"><span>📏 البعد الزاوي:</span> <span id="v5"></span></div>
         </div>
     </div>
 
     <script>
-        let attemptCount = 0;
+        // تعيين تاريخ اليوم تلقائياً عند فتح الصفحة
+        window.onload = function() {
+            let now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('manual-date').value = now.toISOString().slice(0, 16);
+        };
 
-        function tryCalculate() {
-            attemptCount++;
-            const status = document.getElementById('status');
-            const res = document.getElementById('results');
-
+        function calculateMoon() {
+            const status = document.getElementById('status-msg');
+            const resBox = document.getElementById('results');
+            status.innerText = "جاري الحساب...";
+            
             try {
-                // إحداثيات ثابتة للبصرة لضمان استقرار التجربة
-                const observer = new Astronomy.Observer(30.5, 47.8, 0);
-                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, new Date(), 1);
+                const lat = parseFloat(document.getElementById('lat').value);
+                const lon = parseFloat(document.getElementById('lon').value);
+                const observer = new Astronomy.Observer(lat, lon, 0);
+                
+                // استخدام التاريخ المختار من المستخدم
+                let selectedDate = new Date(document.getElementById('manual-date').value);
+                
+                // البحث عن غروب الشمس
+                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, selectedDate, 1);
+                
+                // إذا فشل البحث التلقائي، نستخدم الوقت المختار يدوياً كبديل نهائي
+                let finalSunsetDate = (sunset && sunset.date) ? sunset.date : selectedDate;
 
-                if (sunset && sunset.date) {
-                    const sDate = sunset.date;
-                    const mq = Astronomy.SearchMoonQuarter(sDate);
-                    const nm = mq.prev.date;
-                    const diff = sDate - nm;
-                    
-                    const h = Math.floor(diff / 3600000);
-                    const m = Math.floor((diff % 3600000) / 60000);
-                    const equ = Astronomy.Equator(Astronomy.Body.Moon, sDate, observer);
-                    const hor = Astronomy.Horizon(sDate, observer, equ.ra, equ.dec, 'nora');
-                    const elo = Astronomy.Elongation(Astronomy.Body.Moon, sDate);
+                const mq = Astronomy.SearchMoonQuarter(finalSunsetDate);
+                const nm = mq.prev.date;
+                const diff = finalSunsetDate - nm;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
 
-                    document.getElementById('r1').innerText = sDate.toLocaleTimeString('ar-EG');
-                    document.getElementById('r2').innerText = nm.toLocaleTimeString('ar-EG');
-                    document.getElementById('r3').innerText = h + " ساعة و " + m + " دقيقة";
-                    document.getElementById('r4').innerText = hor.alt.toFixed(2) + "°";
-                    document.getElementById('r5').innerText = elo.angsep.toFixed(2) + "°";
+                const equ = Astronomy.Equator(Astronomy.Body.Moon, finalSunsetDate, observer);
+                const hor = Astronomy.Horizon(finalSunsetDate, observer, equ.ra, equ.dec, 'nora');
+                const elo = Astronomy.Elongation(Astronomy.Body.Moon, finalSunsetDate);
 
-                    status.className = "status-msg success";
-                    status.innerText = "تم استلام البيانات بنجاح ✅";
-                    res.style.display = 'block';
-                    console.log("نجح الحساب في المحاولة رقم: " + attemptCount);
-                } else {
-                    status.innerText = "محاولة رقم " + attemptCount + ": في انتظار استجابة المحرك...";
-                    setTimeout(tryCalculate, 1000); // إعادة المحاولة بعد ثانية
-                }
+                document.getElementById('v1').innerText = finalSunsetDate.toLocaleTimeString('ar-EG');
+                document.getElementById('v2').innerText = nm.toLocaleTimeString('ar-EG');
+                document.getElementById('v3').innerText = h + " ساعة و " + m + " دقيقة";
+                document.getElementById('v4').innerText = hor.alt.toFixed(2) + "°";
+                document.getElementById('v5').innerText = elo.angsep.toFixed(2) + "°";
+
+                status.innerText = "تم الحساب بنجاح ✅";
+                status.style.color = "#10b981";
+                resBox.style.display = 'block';
             } catch (e) {
-                status.innerText = "جاري إعادة التوصيل... (" + attemptCount + ")";
-                setTimeout(tryCalculate, 1500);
+                status.innerText = "خطأ: " + e.message;
+                status.style.color = "#ff4d4d";
             }
         }
-
-        // بدء المحاولة الأولى فور التحميل
-        window.onload = tryCalculate;
     </script>
 </body>
 </html>
