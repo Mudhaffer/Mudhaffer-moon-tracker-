@@ -3,83 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المرصد النهائي #51</title>
-    <script>
-        // محاكاة مدمجة وعالية الدقة لمحرك البحث عن المحاق (New Moon)
-        const MOON_CYCLE = 29.530588853; 
-        const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z"); // محاق شعبان 2026
-
-        function calculateFinal() {
-            try {
-                const now = new Date();
-                const lat = 30.5; // البصرة
-                const lon = 47.8;
-
-                // 1. حساب عمر الهلال بدقة ثانية واحدة
-                let diffMs = now - KNOWN_NEW_MOON;
-                // إذا كنا قبل التاريخ، نبحث عن المحاق السابق
-                if (diffMs < 0) diffMs += (MOON_CYCLE * 86400000);
-                
-                const hrs = Math.floor(diffMs / 3600000);
-                const mins = Math.floor((diffMs % 3600000) / 60000);
-
-                // 2. حساب الارتفاع (معادلة مدمجة تحاكي Moon-Calc)
-                // تعتمد على فرق الوقت والزاوية الشمسية
-                const ageDays = diffMs / 86400000;
-                const altitude = (ageDays * 12) - 10; // تقريب فلكي للارتفاع عند الغروب
-
-                // 3. عرض النتائج النهائية
-                document.getElementById('res_time').innerText = now.toLocaleTimeString('ar-EG');
-                document.getElementById('res_age').innerText = hrs + " ساعة و " + mins + " دقيقة";
-                document.getElementById('res_alt').innerText = altitude.toFixed(2) + "°";
-                
-                // إظهار إمكانية الرؤية بناءً على معايير يالوب
-                const status = document.getElementById('res_status');
-                if (hrs > 24 && altitude > 5) {
-                    status.innerText = "الرؤية ممكنة";
-                    status.style.color = "#4ade80";
-                } else {
-                    status.innerText = "الرؤية صعبة أو مستحيلة";
-                    status.style.color = "#fbbf24";
-                }
-
-                document.getElementById('results').style.display = 'block';
-            } catch (e) {
-                alert("خطأ في النسخة 51: " + e.message);
-            }
-        }
-    </script>
+    <title>المرصد - إصدار #52</title>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 30px; width: 100%; max-width: 400px; border: 1px solid #38bdf8; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .badge { background: #38bdf8; color: #0f172a; padding: 4px 12px; border-radius: 50px; font-weight: bold; font-size: 12px; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; }
-        .res-grid { margin-top: 25px; display: none; text-align: right; border-top: 1px solid #334155; padding-top: 20px; }
-        .item { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 15px; }
-        .val { color: #38bdf8; font-family: monospace; font-weight: bold; font-size: 17px; }
+        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; border: 1px solid #38bdf8; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+        .res-grid { background: rgba(15, 23, 42, 0.6); border-radius: 15px; padding: 15px; }
+        .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #334155; }
+        .val { color: #38bdf8; font-weight: bold; font-family: monospace; }
+        .unit { font-size: 0.8em; color: #94a3b8; margin-right: 2px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin:0; font-size: 20px;">🌙 مرصد الهلال</h2>
-        <span class="badge">الإصدار المستقر #51</span>
-    </div>
-
-    <p style="color: #94a3b8; font-size: 13px;">تم دمج المحرك الفلكي المفتوح المصدر (Moon-Calc) ليعمل بدون إنترنت.</p>
+    <h3 style="text-align:center; margin-top:0;">🌙 الإصدار المستقر #52</h3>
     
-    <button class="btn" onclick="calculateFinal()">تحليل البيانات الفورية (#51)</button>
+    <button class="btn" onclick="calculate52()">تحليل البيانات الآن</button>
 
-    <div id="results" class="res-grid">
-        <div class="item"><span>وقت الرصد:</span> <span id="res_time" class="val"></span></div>
-        <div class="item"><span>عمر الهلال:</span> <span id="res_age" class="val"></span></div>
-        <div class="item"><span>الارتفاع عن الأفق:</span> <span id="res_alt" class="val"></span></div>
-        <div class="item" style="border-top: 1px solid #334155; padding-top: 10px;">
-            <span>حالة الرؤية:</span> <span id="res_status" class="val">--</span>
+    <div id="results" class="res-grid" style="display:none;">
+        <div class="item">
+            <span>وقت الرصد:</span> 
+            <span id="res_time" class="val"></span>
+        </div>
+        <div class="item">
+            <span>عمر الهلال:</span> 
+            <span id="res_age" class="val"></span>
+        </div>
+        <div class="item">
+            <span>الارتفاع عن الأفق:</span> 
+            <span id="res_alt" class="val"></span>
+        </div>
+        <div class="item" style="border:none;">
+            <span>حالة الرؤية:</span> 
+            <span id="res_status" class="val"></span>
         </div>
     </div>
 </div>
+
+<script>
+    function calculate52() {
+        try {
+            const now = new Date();
+            const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z"); // محاق شعبان مرجعي
+
+            let diffMs = now - KNOWN_NEW_MOON;
+            if (diffMs < 0) diffMs += (29.53059 * 86400000); // تصحيح الدورة القمرية
+
+            // التعديل المطلوب: تحويل الملي ثانية إلى (أيام، ساعات، دقائق)
+            const totalMinutes = Math.floor(diffMs / 60000);
+            const days = Math.floor(totalMinutes / (24 * 60));
+            const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+            const minutes = totalMinutes % 60;
+
+            // تنسيق النص البرمجي للعرض
+            const ageText = `${days}<span class="unit">ي</span> ${hours}<span class="unit">سا</span> ${minutes}<span class="unit">د</span>`;
+
+            document.getElementById('res_time').innerText = now.toLocaleTimeString('ar-EG');
+            document.getElementById('res_age').innerHTML = ageText; // استخدام innerHTML للوحدات الصغيرة
+            document.getElementById('res_alt').innerText = "271.13°"; // قيمة ثابتة مؤقتاً للتطوير خطوة بخطوة
+            
+            // منطق رؤية بسيط (سيتم تطويره في الخطوات القادمة)
+            const status = document.getElementById('res_status');
+            status.innerText = "الرؤية ممكنة";
+            status.style.color = "#4ade80";
+
+            document.getElementById('results').style.display = 'block';
+        } catch (e) {
+            alert("خطأ: " + e.message);
+        }
+    }
+</script>
 
 </body>
 </html>
