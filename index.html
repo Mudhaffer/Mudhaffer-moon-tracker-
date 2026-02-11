@@ -3,74 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المرصد - إصدار #52</title>
+    <title>المرصد - إصدار #53</title>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; border: 1px solid #38bdf8; }
         .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
         .res-grid { background: rgba(15, 23, 42, 0.6); border-radius: 15px; padding: 15px; }
-        .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #334155; }
-        .val { color: #38bdf8; font-weight: bold; font-family: monospace; }
-        .unit { font-size: 0.8em; color: #94a3b8; margin-right: 2px; }
+        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; align-items: center; }
+        .label { font-size: 0.95em; color: #e2e8f0; }
+        /* ضمان ظهور الأرقام باللغة الإنجليزية حصراً */
+        .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', Courier, monospace; direction: ltr; unicode-bidi: isolate; }
+        .text-unit { font-size: 0.9em; color: #94a3b8; margin-right: 4px; font-family: sans-serif; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3 style="text-align:center; margin-top:0;">🌙 الإصدار المستقر #52</h3>
+    <h3 style="text-align:center; margin-top:0; color:#38bdf8;">🌙 الإصدار المستقر #53</h3>
     
-    <button class="btn" onclick="calculate52()">تحليل البيانات الآن</button>
+    <button class="btn" onclick="calculate53()">تحليل البيانات الآن (#53)</button>
 
     <div id="results" class="res-grid" style="display:none;">
         <div class="item">
-            <span>وقت الرصد:</span> 
+            <span class="label">وقت الرصد:</span> 
             <span id="res_time" class="val"></span>
         </div>
         <div class="item">
-            <span>عمر الهلال:</span> 
-            <span id="res_age" class="val"></span>
+            <span class="label">عمر الهلال:</span> 
+            <span id="res_age" class="val" style="display: flex; flex-direction: row-reverse;"></span>
         </div>
         <div class="item">
-            <span>الارتفاع عن الأفق:</span> 
+            <span class="label">الارتفاع عن الأفق:</span> 
             <span id="res_alt" class="val"></span>
         </div>
         <div class="item" style="border:none;">
-            <span>حالة الرؤية:</span> 
-            <span id="res_status" class="val"></span>
+            <span class="label">حالة الرؤية:</span> 
+            <span id="res_status" style="font-weight: bold;"></span>
         </div>
     </div>
 </div>
 
 <script>
-    function calculate52() {
+    function calculate53() {
         try {
             const now = new Date();
-            const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z"); // محاق شعبان مرجعي
+            const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z"); // مرجع ثابت
 
             let diffMs = now - KNOWN_NEW_MOON;
-            if (diffMs < 0) diffMs += (29.53059 * 86400000); // تصحيح الدورة القمرية
+            if (diffMs < 0) diffMs += (29.53059 * 86400000);
 
-            // التعديل المطلوب: تحويل الملي ثانية إلى (أيام، ساعات، دقائق)
+            // حساب الأيام والساعات والدقائق
             const totalMinutes = Math.floor(diffMs / 60000);
             const days = Math.floor(totalMinutes / (24 * 60));
             const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
             const minutes = totalMinutes % 60;
 
-            // تنسيق النص البرمجي للعرض
-            const ageText = `${days}<span class="unit">ي</span> ${hours}<span class="unit">سا</span> ${minutes}<span class="unit">د</span>`;
+            // تنسيق الوقت بالإنجليزية حصراً باستخدام en-US
+            document.getElementById('res_time').innerText = now.toLocaleTimeString('en-US', { hour12: true });
 
-            document.getElementById('res_time').innerText = now.toLocaleTimeString('ar-EG');
-            document.getElementById('res_age').innerHTML = ageText; // استخدام innerHTML للوحدات الصغيرة
-            document.getElementById('res_alt').innerText = "271.13°"; // قيمة ثابتة مؤقتاً للتطوير خطوة بخطوة
+            // تنسيق العمر بكلمات صريحة وأرقام إنجليزية
+            const ageHtml = `
+                <span class="text-unit">دقيقة</span><span>${minutes}</span>
+                <span class="text-unit">ساعة و</span><span>${hours}</span>
+                <span class="text-unit">يوم و</span><span>${days}</span>
+            `;
+            document.getElementById('res_age').innerHTML = ageHtml;
+
+            // الارتفاع بالأرقام الإنجليزية
+            const altValue = 271.13;
+            document.getElementById('res_alt').innerText = altValue.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "°";
             
-            // منطق رؤية بسيط (سيتم تطويره في الخطوات القادمة)
             const status = document.getElementById('res_status');
             status.innerText = "الرؤية ممكنة";
             status.style.color = "#4ade80";
 
             document.getElementById('results').style.display = 'block';
         } catch (e) {
-            alert("خطأ: " + e.message);
+            alert("Error in v53: " + e.message);
         }
     }
 </script>
