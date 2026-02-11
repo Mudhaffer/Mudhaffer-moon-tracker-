@@ -2,87 +2,90 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مرصد الهلال - نسخة الطوارئ</title>
+    <title>مرصد الهلال الاحترافي</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
-        body { background: #0b101a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .main-card { background: #161c2d; padding: 25px; border-radius: 20px; max-width: 420px; margin: auto; border: 2px solid #3f51b5; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #2d3748; background: #1a202c; color: white; font-size: 16px; box-sizing: border-box; }
-        button { background: #3f51b5; font-weight: bold; cursor: pointer; border: none; }
-        .res-box { margin-top: 20px; text-align: right; background: #0f172a; padding: 15px; border-radius: 15px; display: none; }
-        .line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e293b; }
-        .yellow { color: #facc15; font-weight: bold; }
-        #log { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
+        body { background: #0b0e14; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .card { background: #1a1f2b; padding: 25px; border-radius: 20px; max-width: 450px; margin: auto; border: 1px solid #3f51b5; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #2d3748; background: #0b0e14; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border-radius: 10px; border: none; background: #3f51b5; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .res-container { margin-top: 20px; background: #0b0e14; border-radius: 15px; display: none; overflow: hidden; }
+        .res-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #1a1f2b; }
+        .label { color: #a0aec0; }
+        .value { color: #facc15; font-weight: bold; font-family: monospace; font-size: 17px; }
+        .highlight { background: rgba(63, 81, 181, 0.2); }
     </style>
 </head>
 <body>
 
-<div class="main-card">
-    <h3 style="color: #4cc9f0;">🌙 حساب بيانات الهلال</h3>
+<div class="card">
+    <h2 style="text-align:center; color: #4cc9f0;">🌙 بيانات الهلال الدقيقة</h2>
     
-    <label style="display:block; text-align:right; font-size:13px;">تاريخ ووقت الرصد:</label>
-    <input type="datetime-local" id="dt">
+    <label>وقت الرصد المستهدف:</label>
+    <input type="datetime-local" id="userTime">
 
     <div style="display:flex; gap:10px;">
-        <input type="number" id="lat" value="30.5" placeholder="عرض">
-        <input type="number" id="lon" value="47.8" placeholder="طول">
+        <input type="number" id="lat" value="30.5" step="any">
+        <input type="number" id="lon" value="47.8" step="any">
     </div>
 
-    <button onclick="doCalc()">عرض النتائج الآن</button>
-    <div id="log"></div>
+    <button onclick="calculatePrecision()">توليد البيانات الفلكية</button>
 
-    <div id="results" class="res-box">
-        <div class="line"><span>🌑 ولادة القمر:</span> <span id="v2" class="yellow"></span></div>
-        <div class="line" style="background:rgba(67,97,238,0.1)"><span>⏳ عمر الهلال:</span> <span id="v3" class="yellow"></span></div>
-        <div class="line"><span>📐 ارتفاع القمر:</span> <span id="v4" class="yellow"></span></div>
-        <div class="line"><span>📏 البعد الزاوي:</span> <span id="v5" class="yellow"></span></div>
+    <div id="resultBox" class="res-container">
+        <div class="res-row"><span class="label">🌑 ولادة القمر (المحاق):</span> <span id="birth" class="value"></span></div>
+        <div class="res-row highlight"><span class="label">⏳ عمر الهلال الآن:</span> <span id="age" class="value"></span></div>
+        <div class="res-row"><span class="label">📐 ارتفاع القمر عن الأفق:</span> <span id="alt" class="value"></span></div>
+        <div class="res-row"><span class="label">📏 البعد الزاوي (الاستطالة):</span> <span id="elo" class="value"></span></div>
     </div>
 </div>
 
 <script>
-    // تعيين الوقت الحالي
+    // تعيين الوقت الحالي عند الفتح
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('dt').value = now.toISOString().slice(0, 16);
+    document.getElementById('userTime').value = now.toISOString().slice(0, 16);
 
-    function doCalc() {
-        const log = document.getElementById('log');
-        const box = document.getElementById('results');
-        log.style.display = 'none';
-
+    function calculatePrecision() {
         try {
-            const time = new Date(document.getElementById('dt').value);
+            const time = new Date(document.getElementById('userTime').value);
             const lat = parseFloat(document.getElementById('lat').value);
             const lon = parseFloat(document.getElementById('lon').value);
             const obs = new Astronomy.Observer(lat, lon, 0);
 
-            // 1. حساب الاستطالة (البعد الزاوي)
-            const elo = Astronomy.Elongation(Astronomy.Body.Moon, time);
-            const eloVal = (elo && elo.angsep) ? elo.angsep.toFixed(2) : "0.00";
-
-            // 2. حساب الارتفاع (بدون خيارات إضافية لمنع التعليق)
-            const pos = Astronomy.Equator(Astronomy.Body.Moon, time, obs, false, false);
-            const hor = Astronomy.Horizon(time, obs, pos.ra, pos.dec, false);
-            const altVal = (hor && hor.alt) ? hor.alt.toFixed(2) : "0.00";
-
-            // 3. حساب العمر (طريقة البحث المباشر)
-            const mq = Astronomy.SearchMoonQuarter(new Date(time.getTime() - (30*86400000)));
-            const birth = (mq && mq.date) ? mq.date : new Date(time.getTime() - (29.5*86400000));
+            // 1. حساب ولادة القمر (المحاق السابق لهذا التاريخ بدقة)
+            // نستخدم SearchMoonQuarter للبحث عن القمر الجديد (0)
+            let searchDate = new Date(time.getTime());
+            let mq = Astronomy.SearchMoonQuarter(searchDate);
             
-            const diff = time - birth;
-            const h = Math.floor(diff / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
+            // إذا كان المحاق المكتشف بعد وقت الرصد، نبحث عن المحاق الذي قبله
+            if (mq.date > time) {
+                mq = Astronomy.SearchMoonQuarter(new Date(mq.date.getTime() - 10 * 86400000));
+            }
+            
+            const birthDate = mq.date;
 
-            // تعبئة البيانات
-            document.getElementById('v2').innerText = birth.toLocaleString('ar-EG');
-            document.getElementById('v3').innerText = h + " ساعة و " + m + " دقيقة";
-            document.getElementById('v4').innerText = altVal + "°";
-            document.getElementById('v5').innerText = eloVal + "°";
+            // 2. حساب الارتفاع الحقيقي (Topocentric Altitude)
+            const equ = Astronomy.Equator(Astronomy.Body.Moon, time, obs, true, true);
+            const hor = Astronomy.Horizon(time, obs, equ.ra, equ.dec, 'none');
 
-            box.style.display = 'block';
-        } catch (e) {
-            log.innerText = "فشل: " + e.message;
-            log.style.display = 'block';
+            // 3. حساب الاستطالة (البعد الزاوي)
+            const elo = Astronomy.Elongation(Astronomy.Body.Moon, time);
+
+            // 4. معالجة عمر الهلال
+            const diffMs = time - birthDate;
+            const hours = Math.floor(diffMs / 3600000);
+            const mins = Math.floor((diffMs % 3600000) / 60000);
+
+            // 5. العرض في الجدول
+            document.getElementById('birth').innerText = birthDate.toLocaleString('ar-EG', {hour12: true});
+            document.getElementById('age').innerText = hours + " ساعة و " + mins + " دقيقة";
+            document.getElementById('alt').innerText = (hor.alt).toFixed(2) + "°";
+            document.getElementById('elo').innerText = (elo.angsep).toFixed(2) + "°";
+
+            document.getElementById('resultBox').style.display = 'block';
+
+        } catch (err) {
+            alert("حدث خطأ في الحساب: " + err.message);
         }
     }
 </script>
