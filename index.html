@@ -1,88 +1,90 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إصدار #46 - نظام الحقول المنفصلة</title>
+    <title>مرصد الهلال #47</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
-        body { background: #0b0e14; color: white; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
-        .card { background: #1a1f2b; padding: 20px; border-radius: 15px; width: 100%; max-width: 380px; border: 2px solid #00e676; }
-        .ver { background: #00e676; color: black; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
-        input, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0b0e14; color: white; box-sizing: border-box; }
-        button { background: #00e676; color: black; font-weight: bold; border: none; margin-top: 10px; cursor: pointer; }
-        .res { margin-top: 15px; background: #0b0e14; border-radius: 10px; display: none; padding: 10px; border: 1px solid #334155; }
-        .row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #1a1f2b; font-size: 14px; }
-        .val { color: #00e676; font-weight: bold; font-family: monospace; }
+        body { background: #0b0e14; color: white; font-family: sans-serif; display: flex; justify-content: center; padding: 15px; }
+        .card { background: #1a1f2b; padding: 20px; border-radius: 20px; width: 100%; max-width: 400px; border: 2px solid #e91e63; }
+        .badge { background: #e91e63; color: white; padding: 3px 10px; border-radius: 5px; font-weight: bold; font-size: 12px; }
+        .input-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
+        select, input, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0b0e14; color: white; font-size: 15px; }
+        button { background: #e91e63; font-weight: bold; border: none; margin-top: 15px; cursor: pointer; }
+        .res-box { margin-top: 20px; background: #0b0e14; border-radius: 12px; display: none; padding: 10px; border: 1px solid #334155; }
+        .item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #1a1f2b; }
+        .val { color: #facc15; font-weight: bold; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div style="display:flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin:0; color:#00e676;">🌙 مرصد الهلال #46</h3>
-        <span class="ver">المحاولة 46</span>
+        <h3 style="margin:0; color:#e91e63;">🌙 مرصد الهلال</h3>
+        <span class="badge">إصدار 47</span>
     </div>
 
-    <p style="font-size: 12px; color: #94a3b8; margin: 15px 0 5px;">أدخل التاريخ يدوياً (يوم-شهر-سنة):</p>
-    <div class="grid">
-        <input type="number" id="d46" value="18" placeholder="يوم">
-        <input type="number" id="m46" value="2" placeholder="شهر">
-    </div>
-    <div class="grid">
-        <input type="number" id="y46" value="2026" placeholder="سنة">
-        <input type="text" id="t46" value="17:39" placeholder="ساعة:دقيقة">
+    <p style="font-size: 12px; color: #94a3b8; margin: 15px 0 5px;">التاريخ (يوم / شهر / سنة):</p>
+    <div class="input-group">
+        <input type="number" id="d47" value="18">
+        <input type="number" id="m47" value="2">
+        <input type="number" id="y47" value="2026">
     </div>
 
-    <p style="font-size: 12px; color: #94a3b8; margin: 10px 0 5px;">الإحداثيات (البصرة):</p>
-    <div class="grid">
-        <input type="number" id="lat46" value="30.5" step="any">
-        <input type="number" id="lon46" value="47.8" step="any">
+    <p style="font-size: 12px; color: #94a3b8; margin: 10px 0 5px;">الوقت (ساعة : دقيقة):</p>
+    <div class="input-group">
+        <select id="h47"><option value="17">17 (5 PM)</option></select>
+        <select id="min47"><option value="39">39</option></select>
+        <div style="font-size:10px; align-self:center;">تنسيق 24س</div>
     </div>
 
-    <button onclick="calculate46()">تحليل المحاولة رقم 46</button>
+    <button onclick="calculate47()">تشغيل المحاولة رقم 47</button>
 
-    <div id="res46" class="res">
-        <div class="row"><span>🌑 ولادة القمر (UTC):</span> <span id="out1" class="val"></span></div>
-        <div class="row" style="background:rgba(0,230,118,0.05)"><span>⏳ عمر الهلال:</span> <span id="out2" class="val"></span></div>
-        <div class="row"><span>📐 الارتفاع:</span> <span id="out3" class="val"></span></div>
-        <div class="row"><span>📏 البعد الزاوي:</span> <span id="out4" class="val"></span></div>
+    <div id="res47" class="res-box">
+        <div class="item"><span>🌑 ولادة القمر (UTC):</span> <span id="out1" class="val"></span></div>
+        <div class="item" style="background:rgba(233,30,99,0.05)"><span>⏳ عمر الهلال:</span> <span id="out2" class="val"></span></div>
+        <div class="item"><span>📐 الارتفاع:</span> <span id="out3" class="val"></span></div>
+        <div class="item"><span>📏 البعد الزاوي:</span> <span id="out4" class="val"></span></div>
     </div>
 </div>
 
 <script>
-    function calculate46() {
+    // تعبئة الساعات والدقائق تلقائياً
+    const hSel = document.getElementById('h47');
+    const mSel = document.getElementById('min47');
+    for(let i=0; i<24; i++) { if(i!==17) hSel.innerHTML += `<option value="${i}">${i}</option>`; }
+    for(let i=0; i<60; i++) { if(i!==39) mSel.innerHTML += `<option value="${i}">${i<10?'0'+i:i}</option>`; }
+
+    function calculate47() {
         try {
-            // جلب القيم يدوياً لكسر لعنة الـ undefined
-            const day = document.getElementById('d46').value;
-            const month = document.getElementById('m46').value;
-            const year = document.getElementById('y46').value;
-            const timeStr = document.getElementById('t46').value;
+            const day = document.getElementById('d47').value;
+            const month = document.getElementById('m47').value;
+            const year = document.getElementById('y47').value;
+            const hour = document.getElementById('h47').value;
+            const min = document.getElementById('min47').value;
 
-            // بناء كائن التاريخ بطريقة "التركيب النصي" الصارمة
-            const dateObj = new Date(`${year}-${month}-${day}T${timeStr}:00`);
+            // إنشاء التاريخ بطريقة آمنة جداً
+            const date = new Date(year, month - 1, day, hour, min);
             
-            if (isNaN(dateObj.getTime())) throw "تأكد من كتابة الوقت بشكل صحيح (مثال 17:30)";
+            if (isNaN(date.getTime())) throw "التاريخ غير صحيح";
 
-            const obs = new Astronomy.Observer(
-                parseFloat(document.getElementById('lat46').value),
-                parseFloat(document.getElementById('lon46').value), 
-                0
-            );
+            const obs = new Astronomy.Observer(30.5, 47.8, 0);
 
-            // حساب المحاق والبيانات
-            let mq = Astronomy.SearchMoonQuarter(dateObj);
-            if (mq.quarter !== 0 || mq.date > dateObj) {
+            // حساب المحاق
+            let mq = Astronomy.SearchMoonQuarter(date);
+            if (mq.quarter !== 0 || mq.date > date) {
                 mq = Astronomy.SearchMoonQuarter(new Date(mq.date.getTime() - 15 * 86400000));
             }
 
-            const equ = Astronomy.Equator(Astronomy.Body.Moon, dateObj, obs, true, true);
-            const hor = Astronomy.Horizon(dateObj, obs, equ.ra, equ.dec, 'none');
-            const elo = Astronomy.Elongation(Astronomy.Body.Moon, dateObj);
+            // الحسابات الفلكية
+            const equ = Astronomy.Equator(Astronomy.Body.Moon, date, obs, true, true);
+            const hor = Astronomy.Horizon(date, obs, equ.ra, equ.dec, 'none');
+            const elo = Astronomy.Elongation(Astronomy.Body.Moon, date);
 
-            // عرض النتائج
-            const diff = dateObj - mq.date;
+            // عرض النتائج بحماية من القيم الفارغة
+            const diff = date - mq.date;
             const h = Math.floor(diff / 3600000);
             const m = Math.floor((diff % 3600000) / 60000);
 
@@ -91,10 +93,10 @@
             document.getElementById('out3').innerText = (hor.alt || 0).toFixed(2) + "°";
             document.getElementById('out4').innerText = (elo.angsep || 0).toFixed(2) + "°";
 
-            document.getElementById('res46').style.display = 'block';
+            document.getElementById('res47').style.display = 'block';
 
         } catch (err) {
-            alert("فشل في المحاولة 46: " + err);
+            alert("خطأ في المحاولة 47: " + err);
         }
     }
 </script>
