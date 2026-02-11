@@ -2,29 +2,32 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرصد الهلال - الإصدار النهائي</title>
+    <title>مرصد الهلال الذكي - النسخة المستقرة</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #0b0e14; color: white; text-align: center; padding: 20px; }
-        .card { background: #1a1f2b; padding: 25px; border-radius: 20px; max-width: 400px; margin: auto; border: 2px solid #4361ee; }
+        .card { background: #1a1f2b; padding: 30px; border-radius: 20px; max-width: 450px; margin: auto; border: 1px solid #4361ee; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .status { color: #4caf50; font-size: 14px; margin-bottom: 15px; }
         input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; text-align: center; font-size: 18px; }
-        button { background: #4361ee; color: white; border: none; padding: 15px; width: 85%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; }
-        .result-box { margin-top: 25px; text-align: right; background: #242c3d; padding: 15px; border-radius: 15px; display: none; border: 1px solid #4cc9f0; }
+        button { background: #4361ee; color: white; border: none; padding: 18px; width: 85%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; }
+        .result-box { margin-top: 25px; text-align: right; background: #242c3d; padding: 20px; border-radius: 15px; display: none; border-right: 5px solid #4cc9f0; }
         .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }
-        #debug-text { color: #ff4d4d; font-size: 14px; margin-top: 15px; }
+        #error-msg { color: #ff4d4d; font-size: 14px; margin-top: 15px; display: none; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>🌙 مرصد الهلال الذكي</h2>
-        <input type="number" id="lat" value="30.5">
-        <input type="number" id="lon" value="47.8">
-        <button onclick="finalCrescentCheck()">احسب الآن (نسخة مستقرة)</button>
-        <div id="debug-text"></div>
+        <h2 style="color: #4cc9f0;">🌙 مرصد الهلال الذكي</h2>
+        <div id="lib-status" class="status">جاري فحص المحرك الفلكي...</div>
+        
+        <input type="number" id="lat" value="30.5" step="any">
+        <input type="number" id="lon" value="47.8" step="any">
+        
+        <button onclick="calculateMoon()">احسب البيانات الآن</button>
+        <div id="error-msg"></div>
 
         <div id="results" class="result-box">
-            <div class="row"><span>🌅 وقت الغروب:</span> <span id="v-sunset"></span></div>
+            <div class="row"><span>🌅 وقت الغروب:</span> <span id="v-sunset" style="color:#ffeb3b"></span></div>
             <div class="row"><span>🌑 ولادة الهلال:</span> <span id="v-newmoon"></span></div>
             <div class="row" style="color:#4cc9f0; font-weight:bold;"><span>⏳ عمر الهلال:</span> <span id="v-age"></span></div>
             <div class="row"><span>📐 الارتفاع:</span> <span id="v-alt"></span></div>
@@ -33,26 +36,39 @@
     </div>
 
     <script>
-        function finalCrescentCheck() {
-            const debug = document.getElementById('debug-text');
+        // التأكد من تحميل المكتبة
+        window.onload = function() {
+            if (typeof Astronomy !== 'undefined') {
+                document.getElementById('lib-status').innerText = "المحرك الفلكي جاهز ✅";
+            } else {
+                document.getElementById('lib-status').innerText = "خطأ: فشل تحميل المحرك ❌";
+            }
+        };
+
+        function calculateMoon() {
+            const err = document.getElementById('error-msg');
             const res = document.getElementById('results');
-            debug.innerText = "";
+            err.style.display = 'none';
             
             try {
-                const observer = new Astronomy.Observer(30.5, 47.8, 0);
-                let t = new Date();
-                t.setHours(0,0,0,0); // نبدأ البحث من مطلع اليوم لضمان العثور على الغروب
-
-                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, t, 1);
+                const lat = parseFloat(document.getElementById('lat').value);
+                const lon = parseFloat(document.getElementById('lon').value);
+                const observer = new Astronomy.Observer(lat, lon, 0);
                 
+                // استخدام نفس المنطق الذي نجح في الفحص المستقل (صورة a1)
+                let now = new Date();
+                // البحث عن أقرب غروب شمس
+                const sunset = Astronomy.SearchRiseSet(Astronomy.Body.Sun, observer, 1, now, 1);
+                
+                // فحص صارم قبل القراءة لمنع خطأ 'date'
                 if (sunset && sunset.date) {
                     const sunsetDate = sunset.date;
                     const mq = Astronomy.SearchMoonQuarter(sunsetDate);
                     const newMoonDate = mq.prev.date;
 
-                    const ageMs = sunsetDate - newMoonDate;
-                    const h = Math.floor(ageMs / 3600000);
-                    const m = Math.floor((ageMs % 3600000) / 60000);
+                    const diff = sunsetDate - newMoonDate;
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
 
                     const mEqu = Astronomy.Equator(Astronomy.Body.Moon, sunsetDate, observer);
                     const mHor = Astronomy.Horizon(sunsetDate, observer, mEqu.ra, mEqu.dec, 'nora');
@@ -66,10 +82,11 @@
 
                     res.style.display = 'block';
                 } else {
-                    debug.innerText = "تنبيه: لم يتم العثور على بيانات الغروب، جرب تحديث الصفحة.";
+                    throw "لم يتم العثور على بيانات الغروب لهذا التوقيت.";
                 }
             } catch (e) {
-                debug.innerText = "خطأ تقني: " + e.message;
+                err.innerText = "تنبيه النظام: " + e;
+                err.style.display = 'block';
             }
         }
     </script>
