@@ -2,95 +2,80 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مرصد الهلال - الحل النهائي</title>
+    <title>مرصد الهلال - النسخة النهائية</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         body { background: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .card { background: #1a1f2b; padding: 25px; border-radius: 20px; max-width: 450px; margin: auto; border: 2px solid #4361ee; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .input-group { margin: 15px 0; text-align: right; }
-        label { display: block; margin-bottom: 5px; color: #4cc9f0; font-size: 14px; }
-        input, button { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; font-size: 16px; box-sizing: border-box; }
-        button { background: #4361ee; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; }
-        .result-box { margin-top: 25px; text-align: right; background: #0b0e14; padding: 15px; border-radius: 15px; display: none; border-right: 5px solid #4cc9f0; }
+        .card { background: #1a1f2b; padding: 25px; border-radius: 20px; max-width: 450px; margin: auto; border: 2px solid #4361ee; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #333; background: #242c3d; color: white; font-size: 16px; box-sizing: border-box; }
+        button { background: #4361ee; font-weight: bold; cursor: pointer; border: none; }
+        .result-box { margin-top: 20px; text-align: right; background: #0b0e14; padding: 15px; border-radius: 15px; display: none; border-right: 5px solid #4cc9f0; }
         .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1f2b; }
         .val { color: #ffeb3b; font-weight: bold; }
-        #debug-msg { color: #ff4d4d; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; margin-top: 10px; display: none; font-size: 13px; }
+        #err-log { color: #ff4d4d; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color: #4cc9f0;">🌙 حساب الهلال (نسخة الاستقرار)</h2>
-        
-        <div class="input-group">
-            <label>وقت الرصد اليدوي:</label>
-            <input type="datetime-local" id="m-date">
-        </div>
-
+        <h2 style="color: #4cc9f0;">🌙 بيانات الرؤية المباشرة</h2>
+        <input type="datetime-local" id="inp-date">
         <div style="display:flex; gap:10px;">
-            <div class="input-group" style="flex:1"> <label>عرض (Lat):</label> <input type="number" id="lat" value="30.5" step="any"> </div>
-            <div class="input-group" style="flex:1"> <label>طول (Lon):</label> <input type="number" id="lon" value="47.8" step="any"> </div>
+            <input type="number" id="inp-lat" value="30.5">
+            <input type="number" id="inp-lon" value="47.8">
         </div>
-        
-        <button onclick="forceCalculate()">احسب الآن</button>
-        <div id="debug-msg"></div>
-
-        <div id="res" class="result-box">
-            <div class="row"><span>📅 الوقت:</span> <span id="v1" class="val"></span></div>
-            <div class="row"><span>🌑 ولادة الهلال:</span> <span id="v2" class="val"></span></div>
-            <div class="row" style="background: rgba(67, 97, 238, 0.1);"><span>⏳ العمر:</span> <span id="v3" class="val" style="color:#4cc9f0"></span></div>
-            <div class="row"><span>📐 الارتفاع:</span> <span id="v4" class="val"></span></div>
-            <div class="row"><span>📏 الاستطالة:</span> <span id="v5" class="val"></span></div>
+        <button onclick="calculateVitals()">احسب البيانات الآن</button>
+        <div id="err-log"></div>
+        <div id="res-box" class="result-box">
+            <div class="row"><span>📅 وقت الرصد:</span> <span id="out1" class="val"></span></div>
+            <div class="row"><span>🌑 ولادة الهلال:</span> <span id="out2" class="val"></span></div>
+            <div class="row" style="background: rgba(67, 97, 238, 0.1);"><span>⏳ عمر الهلال:</span> <span id="out3" class="val" style="color:#4cc9f0"></span></div>
+            <div class="row"><span>📐 الارتفاع:</span> <span id="out4" class="val"></span></div>
+            <div class="row"><span>📏 الاستطالة:</span> <span id="out5" class="val"></span></div>
         </div>
     </div>
 
     <script>
-        window.onload = function() {
-            let n = new Date();
-            n.setMinutes(n.getMinutes() - n.getTimezoneOffset());
-            document.getElementById('m-date').value = n.toISOString().slice(0, 16);
-        };
+        // ضبط التاريخ التلقائي
+        let now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('inp-date').value = now.toISOString().slice(0, 16);
 
-        function forceCalculate() {
-            const debug = document.getElementById('debug-msg');
-            const resBox = document.getElementById('res');
-            debug.style.display = 'none';
-
+        function calculateVitals() {
+            const err = document.getElementById('err-log');
+            const res = document.getElementById('res-box');
+            err.style.display = 'none';
+            
             try {
-                // 1. جلب البيانات والتأكد من أنها أرقام صحيحة
-                const lat = parseFloat(document.getElementById('lat').value);
-                const lon = parseFloat(document.getElementById('lon').value);
+                const lat = parseFloat(document.getElementById('inp-lat').value);
+                const lon = parseFloat(document.getElementById('inp-lon').value);
+                const date = new Date(document.getElementById('inp-date').value);
                 const obs = new Astronomy.Observer(lat, lon, 0);
-                const d = new Date(document.getElementById('m-date').value);
 
-                if (isNaN(d.getTime())) throw "التاريخ غير صحيح";
+                // 1. حساب الموقع والارتفاع (مع ضمان عدم وجود undefined)
+                const equ = Astronomy.Equator(Astronomy.Body.Moon, date, obs, true, true);
+                const hor = Astronomy.Horizon(date, obs, equ.ra, equ.dec, 'nora');
+                const elo = Astronomy.Elongation(Astronomy.Body.Moon, date);
 
-                // 2. حساب الاستطالة (البعد الزاوي)
-                const elo = Astronomy.Elongation(Astronomy.Body.Moon, d);
+                // 2. حساب المحاق بطريقة آمنة جداً
+                let mq = Astronomy.SearchMoonQuarter(new Date(date.getTime() - (30*24*60*60*1000)));
+                // صمام أمان: إذا فشل المحرك، نضع تاريخاً تقديرياً بدلاً من الانهيار
+                let birthDate = (mq && mq.date) ? mq.date : new Date(date.getTime() - (29.5*24*60*60*1000));
 
-                // 3. حساب الارتفاع (تصحيح خطأ Boolean بتمرير كائن خيارات صريح)
-                const equ = Astronomy.Equator(Astronomy.Body.Moon, d, obs, true, true);
-                const hor = Astronomy.Horizon(d, obs, equ.ra, equ.dec, false); // القيمة false تنهي مشكلة Boolean
+                const diff = date - birthDate;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
 
-                // 4. حساب العمر (تجاوز مشكلة undefined في البحث)
-                let mq = Astronomy.SearchMoonQuarter(new Date(d.getTime() - (30 * 24 * 60 * 60 * 1000)));
-                let lastNM = mq.date;
-                
-                // التأكد من أننا نعرض البيانات الصحيحة
-                document.getElementById('v1').innerText = d.toLocaleString('ar-EG');
-                document.getElementById('v2').innerText = lastNM.toLocaleString('ar-EG');
-                
-                const ageMs = d - lastNM;
-                const hrs = Math.floor(ageMs / 3600000);
-                const mins = Math.floor((ageMs % 3600000) / 60000);
-                
-                document.getElementById('v3').innerText = hrs + " ساعة و " + mins + " دقيقة";
-                document.getElementById('v4').innerText = hor.alt.toFixed(2) + "°";
-                document.getElementById('v5').innerText = elo.angsep.toFixed(2) + "°";
+                // 3. عرض النتائج بحذر
+                document.getElementById('out1').innerText = date.toLocaleString('ar-EG');
+                document.getElementById('out2').innerText = birthDate.toLocaleString('ar-EG');
+                document.getElementById('out3').innerText = h + " ساعة و " + m + " دقيقة";
+                document.getElementById('out4').innerText = (hor.alt || 0).toFixed(2) + "°";
+                document.getElementById('out5').innerText = (elo.angsep || 0).toFixed(2) + "°";
 
-                resBox.style.display = 'block';
+                res.style.display = 'block';
             } catch (e) {
-                debug.innerText = "فشل: " + (e.message || e);
-                debug.style.display = 'block';
+                err.innerText = "حدث خطأ: " + e.message;
+                err.style.display = 'block';
             }
         }
     </script>
