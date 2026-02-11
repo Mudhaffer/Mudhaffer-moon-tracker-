@@ -2,106 +2,74 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحرك العالمي للهلال - إصدار #48</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحرك المرجعي #49</title>
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
-        body { background: #05070a; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; line-height: 1.6; }
-        .container { max-width: 500px; margin: auto; background: #0f172a; border: 1px solid #1e293b; border-radius: 15px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .header { text-align: center; border-bottom: 2px solid #334155; margin-bottom: 20px; padding-bottom: 10px; }
-        .ver-tag { color: #38bdf8; font-size: 12px; font-weight: bold; }
-        .data-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .data-item { background: #1e293b; padding: 15px; border-radius: 10px; border-right: 4px solid #38bdf8; }
-        .label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 5px; }
-        .value { display: block; font-size: 18px; font-weight: bold; color: #f1f5f9; font-family: monospace; }
-        .btn-update { width: 100%; padding: 15px; margin-top: 20px; background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-update:hover { background: #0ea5e9; }
-        .error-log { color: #f87171; font-size: 11px; margin-top: 10px; text-align: center; }
+        body { background: #0b0e14; color: white; font-family: sans-serif; padding: 15px; text-align: center; }
+        .box { background: #1a1f2b; border: 2px solid #22d3ee; border-radius: 15px; padding: 20px; max-width: 400px; margin: auto; }
+        .val { color: #22d3ee; font-weight: bold; font-family: monospace; display: block; margin-bottom: 10px; font-size: 1.2em; }
+        .label { color: #94a3b8; font-size: 0.9em; }
+        button { background: #22d3ee; color: #0b0e14; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h2 style="margin:0; color:#38bdf8;">🌙 المحرك المرجعي</h2>
-        <span class="ver-tag">النسخة الاحترافية الكاملة - محاولة #48</span>
-    </div>
+<div class="box">
+    <h3>🌙 مرصد الهلال - محاولة #49</h3>
+    <hr style="border: 0; border-top: 1px solid #334155; margin: 15px 0;">
+    
+    <span class="label">وقت الولادة (UTC):</span>
+    <span id="res1" class="val">بانتظار التشغيل...</span>
 
-    <div class="data-grid">
-        <div class="data-item">
-            <span class="label">توقيت الرصد (محلي):</span>
-            <span id="obs-time" class="value">--:--</span>
-        </div>
-        <div class="data-item">
-            <span class="label">لحظة الاقتران / ولادة القمر (UTC):</span>
-            <span id="birth-time" class="value">جاري الحساب...</span>
-        </div>
-        <div class="data-item" style="border-right-color: #fbbf24;">
-            <span class="label">عمر الهلال الفعلي:</span>
-            <span id="moon-age" class="value">--</span>
-        </div>
-        <div class="data-item">
-            <span class="label">ارتفاع القمر عن الأفق:</span>
-            <span id="moon-alt" class="value">0.00°</span>
-        </div>
-        <div class="data-item">
-            <span class="label">البعد الزاوي (الاستطالة):</span>
-            <span id="moon-elo" class="value">0.00°</span>
-        </div>
-    </div>
+    <span class="label">عمر الهلال الحالي:</span>
+    <span id="res2" class="val">--</span>
 
-    <button class="btn-update" onclick="initEngine()">تحديث البيانات الفورية</button>
-    <div id="log" class="error-log"></div>
+    <span class="label">الارتفاع الزاوي:</span>
+    <span id="res3" class="val">--</span>
+
+    <button onclick="start49()">حساب البيانات الآن (#49)</button>
+    <div id="debug" style="font-size: 10px; color: #444; margin-top: 10px;"></div>
 </div>
 
 <script>
-    // المحرك الأساسي المستوحى من تطبيق Moon-Calc العالمي
-    function initEngine() {
-        const log = document.getElementById('log');
+    function start49() {
+        const debug = document.getElementById('debug');
         try {
-            // 1. تحديد الوقت والإحداثيات (البصرة كمثال مرجعي)
+            // استخدام الوقت الحالي للنظام مباشرة لتفادي خطأ undefined
             const now = new Date();
-            document.getElementById('obs-time').innerText = now.toLocaleString('ar-EG');
-            
-            const lat = 30.5;
-            const lon = 47.8;
-            const observer = new Astronomy.Observer(lat, lon, 0);
+            const obs = new Astronomy.Observer(30.5, 47.8, 0);
 
-            // 2. البحث عن أقرب محاق (New Moon) - معالجة خطأ الـ 700 ساعة
-            let searchDate = new Date(now.getTime());
-            let mq = Astronomy.SearchMoonQuarter(searchDate);
-            
-            // إذا كان الربع المكتشف ليس محاقاً أو في المستقبل، نعود للخلف
+            // حساب المحاق بطريقة المحرك العالمي
+            let mq = Astronomy.SearchMoonQuarter(now);
             if (mq.quarter !== 0 || mq.date > now) {
-                mq = Astronomy.SearchMoonQuarter(new Date(mq.date.getTime() - 20 * 86400000));
+                mq = Astronomy.SearchMoonQuarter(new Date(mq.date.getTime() - 15 * 86400000));
             }
 
-            // 3. الحسابات الفيزيائية للقمر
-            const equ = Astronomy.Equator(Astronomy.Body.Moon, now, observer, true, true);
-            const hor = Astronomy.Horizon(now, observer, equ.ra, equ.dec, 'none');
-            const elo = Astronomy.Elongation(Astronomy.Body.Moon, now);
+            // الحسابات الفلكية الأساسية
+            const equ = Astronomy.Equator(Astronomy.Body.Moon, now, obs, true, true);
+            const hor = Astronomy.Horizon(now, obs, equ.ra, equ.dec, 'none');
 
-            // 4. معالجة الفوارق الزمنية
-            const diffMs = now - mq.date;
-            const hrs = Math.floor(diffMs / (1000 * 60 * 60));
-            const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            // حساب العمر بالساعات والدقائق
+            const diff = now.getTime() - mq.date.getTime();
+            const hrs = Math.floor(diff / 3600000);
+            const mins = Math.floor((diff % 3600000) / 60000);
 
-            // 5. عرض النتائج النهائية بدقة المراصد
-            document.getElementById('birth-time').innerText = mq.date.toUTCString();
-            document.getElementById('moon-age').innerText = `${hrs} ساعة و ${mins} دقيقة`;
-            document.getElementById('moon-alt').innerText = (hor.alt || 0).toFixed(4) + "°";
-            document.getElementById('moon-elo').innerText = (elo.angsep || 0).toFixed(4) + "°";
-            
-            log.innerText = "تم تحديث المحرك بنجاح (Ver 48)";
-            log.style.color = "#4ade80";
+            // عرض النتائج مع فحص الأمان لكل قيمة
+            document.getElementById('res1').innerText = mq.date ? mq.date.toISOString() : "N/A";
+            document.getElementById('res2').innerText = hrs + " ساعة و " + mins + " دقيقة";
+            document.getElementById('res3').innerText = (hor && hor.alt) ? hor.alt.toFixed(2) + "°" : "0.00°";
+
+            debug.innerText = "تم التحديث بنجاح: " + now.toLocaleTimeString();
 
         } catch (e) {
-            log.innerText = "فشل المحرك: " + e.message;
-            log.style.color = "#f87171";
+            alert("خطأ في المحاولة 49: " + e.message);
+            debug.innerText = "Error: " + e.message;
         }
     }
-
-    // التشغيل التلقائي عند فتح الصفحة لضمان عدم وجود قيم undefined
-    window.onload = initEngine;
+    
+    // محاولة التشغيل الذاتي عند التحميل
+    window.onload = start49;
 </script>
 
 </body>
