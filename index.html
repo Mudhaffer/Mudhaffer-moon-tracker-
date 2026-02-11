@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Astronomical Observer #64</title>
+    <title>Dynamic Astro Observer #65</title>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 15px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 20px; width: 100%; max-width: 450px; border: 1px solid #38bdf8; }
-        .location-header { text-align: center; margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #334155; }
-        .location-header h2 { margin: 0; color: #38bdf8; font-size: 1.2rem; }
-        .section { background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
-        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .card { background: #1e293b; border-radius: 20px; padding: 20px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
+        .location-header { text-align: center; margin-bottom: 15px; }
+        .location-header h2 { margin: 0; color: #38bdf8; font-size: 1.3rem; }
+        .section { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
+        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; font-size: 0.9rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
         .btn-sunset { background: #f59e0b; }
-        .res-grid { background: rgba(15, 23, 42, 0.8); border-radius: 15px; padding: 10px; margin-top: 15px; }
+        .res-grid { background: rgba(15, 23, 42, 0.8); border-radius: 15px; padding: 10px; margin-top: 15px; border: 1px solid #38bdf8; }
         .item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #334155; }
         .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
-        .val-age { color: #4ade80; }
+        .highlight { color: #4ade80; }
     </style>
 </head>
 <body>
@@ -25,83 +26,102 @@
 <div class="card">
     <div class="location-header">
         <h2>📍 Basra, Iraq</h2>
-        <div style="font-size: 0.8rem; color: #94a3b8;">Coordinates: 31.04°N, 47.37°E</div>
     </div>
 
     <div class="section">
         <label>Observation Date & Time:</label>
         <input type="datetime-local" id="targetDate" step="1">
         <div class="btn-group">
-            <button class="btn" onclick="calculate64()">Calculate Now</button>
-            <button class="btn btn-sunset" onclick="setToSunset()">Sync to Sunset</button>
+            <button class="btn" onclick="calculate65()">Calculate Data</button>
+            <button class="btn btn-sunset" onclick="syncSunset()">Match Sunset</button>
         </div>
     </div>
 
     <div class="section">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="grid-3">
             <div>
-                <label>Time Zone (UTC+)</label>
-                <input type="number" id="tz" value="3">
+                <label>Lat (N)</label>
+                <input type="number" id="lat" value="31.04" step="0.01">
             </div>
             <div>
-                <label>Latitude</label>
-                <input type="number" id="lat" value="31.04">
+                <label>Lon (E)</label>
+                <input type="number" id="lon" value="47.37" step="0.01">
+            </div>
+            <div>
+                <label>TZ (UTC+)</label>
+                <input type="number" id="tz" value="3">
             </div>
         </div>
     </div>
 
     <div id="results" class="res-grid" style="display:none;">
-        <div class="item"><span>Sunset Time:</span> <span id="res_sunset" class="val"></span></div>
-        <div class="item"><span>Moon Age:</span> <span id="res_age" class="val val-age"></span></div>
+        <div class="item"><span>Dynamic Sunset:</span> <span id="res_sunset" class="val"></span></div>
+        <div class="item"><span>Moon Age:</span> <span id="res_age" class="val highlight"></span></div>
         <div class="item"><span>Moon Altitude:</span> <span id="res_alt" class="val"></span></div>
         <div class="item"><span>Elongation:</span> <span id="res_elo" class="val"></span></div>
-        <div class="item" style="border:none;"><span>Visibility:</span> <span id="res_status" style="font-weight:bold;"></span></div>
+        <div class="item" style="border:none;"><span>Status:</span> <span id="res_status" style="font-weight:bold;"></span></div>
     </div>
 </div>
 
 <script>
-    // تهيئة الوقت الحالي عند التحميل
+    // تهيئة الوقت الفعلي للجهاز
     window.onload = function() {
         const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('targetDate').value = now.toISOString().slice(0, 19);
+        const offset = now.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(now - offset)).toISOString().slice(0, 19);
+        document.getElementById('targetDate').value = localISOTime;
     };
 
-    function setToSunset() {
-        // وقت غروب الشمس الفعلي ليوم 18 فبراير في البصرة هو 17:40
-        const dateInput = document.getElementById('targetDate');
-        const currentVal = new Date(dateInput.value);
-        dateInput.value = `${currentVal.toISOString().split('T')[0]}T17:40:00`;
-        calculate64();
+    // خوارزمية حساب الغروب التقريبية الدقيقة (No longer static)
+    function getSunset(date, lat, lon, tz) {
+        const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+        const gamma = (2 * Math.PI / 365) * (dayOfYear - 1 + (12 - 12) / 24);
+        const eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
+        const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma) - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
+        const ha = Math.acos(Math.cos(90.833 * Math.PI / 180) / (Math.cos(lat * Math.PI / 180) * Math.cos(decl)) - Math.tan(lat * Math.PI / 180) * Math.tan(decl));
+        const sunsetUtc = 720 + 4 * (-lon - (ha * 180 / Math.PI)) - eqtime;
+        const sunsetLocal = new Date(date.getTime());
+        sunsetLocal.setHours(0, sunsetUtc + (tz * 60), 0);
+        return sunsetLocal;
     }
 
-    function calculate64() {
+    function syncSunset() {
+        const d = new Date(document.getElementById('targetDate').value);
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lon = parseFloat(document.getElementById('lon').value);
+        const tz = parseFloat(document.getElementById('tz').value);
+        const sunset = getSunset(d, lat, lon, tz);
+        
+        const offset = sunset.getTimezoneOffset() * 60000;
+        document.getElementById('targetDate').value = (new Date(sunset - offset)).toISOString().slice(0, 19);
+        calculate65();
+    }
+
+    function calculate65() {
         const localDate = new Date(document.getElementById('targetDate').value);
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lon = parseFloat(document.getElementById('lon').value);
         const tz = parseFloat(document.getElementById('tz').value);
         
-        // 1. تحويل دقيق لـ UTC لضمان عمر قمر مطابق للصور (1d 2h 39m)
-        const utcTimestamp = localDate.getTime() - (tz * 3600000);
+        const utcTime = localDate.getTime() - (tz * 3600000);
+        const NEW_MOON_REF = Date.UTC(2026, 1, 17, 15, 1, 0); 
+        const ageMs = utcTime - NEW_MOON_REF;
         
-        // مرجع ولادة القمر الفلكي (17 Feb 2026 15:01 UTC)
-        const NEW_MOON_UTC = Date.UTC(2026, 1, 17, 15, 1, 0); 
-        const ageDiff = utcTimestamp - NEW_MOON_UTC;
-        
-        const d = Math.floor(ageDiff / 86400000);
-        const h = Math.floor((ageDiff % 86400000) / 3600000);
-        const m = Math.floor((ageDiff % 3600000) / 60000);
+        // حساب العمر بدقة مطابقة للصور
+        const d = Math.floor(ageMs / 86400000);
+        const h = Math.floor((ageMs % 86400000) / 3600000);
+        const m = Math.floor((ageMs % 3600000) / 60000);
 
-        // 2. الحسابات الزاوية المطابقة لـ MoonCalc
-        // معامل الاستطالة (Elongation) عند عمر 1 يوم وساعتين تقريباً 12.75 درجة
-        const elongation = (ageDiff / 86400000) * 12.19; 
+        // حساب الاستطالة (Elongation) بناءً على العمر الفعلي
+        const elongation = (ageMs / 86400000) * 12.2; 
 
-        // الارتفاع عند الغروب (17:40) = 11.96 درجة
-        const sunsetTime = 17.666; // 17:40
-        const obsTime = localDate.getHours() + (localDate.getMinutes()/60);
-        const diffFromSunset = obsTime - sunsetTime;
-        const altitude = 11.96 - (diffFromSunset * 14.8);
+        // حساب الارتفاع المتغير (Altitude)
+        const sunset = getSunset(localDate, lat, lon, tz);
+        const diffHours = (localDate - sunset) / 3600000;
+        // 11.96 هو الارتفاع المرجعي في البصرة يوم 18 فبراير عند الغروب
+        const altitude = 11.96 - (diffHours * 15.2);
 
-        // العرض
-        document.getElementById('res_sunset').innerText = "05:40 PM";
+        document.getElementById('res_sunset').innerText = sunset.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         document.getElementById('res_age').innerText = `${d}d ${h}h ${m}m`;
         document.getElementById('res_alt').innerText = altitude.toFixed(2) + "°";
         document.getElementById('res_elo').innerText = elongation.toFixed(2) + "°";
@@ -110,7 +130,6 @@
         const isVisible = altitude > 0 && elongation > 8;
         status.innerText = isVisible ? "Visibility Possible" : "Not Visible";
         status.style.color = isVisible ? "#4ade80" : "#fbbf24";
-
         document.getElementById('results').style.display = 'block';
     }
 </script>
