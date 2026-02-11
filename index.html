@@ -3,122 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astronomical Observer #56</title>
+    <title>Basra Observatory #57</title>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 420px; border: 1px solid #38bdf8; }
         h3 { text-align: center; color: #38bdf8; margin-top: 0; }
-        .input-section { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed #334155; }
+        .input-section { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
         input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; }
         .res-grid { background: rgba(15, 23, 42, 0.8); border-radius: 15px; padding: 10px; margin-top: 20px; }
-        .item { display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #334155; align-items: center; }
+        .item { display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #334155; }
         .label { font-size: 0.85rem; color: #94a3b8; }
         .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
+        .loc-badge { font-size: 0.7rem; background: #0ea5e9; color: white; padding: 2px 8px; border-radius: 10px; display: block; width: fit-content; margin: 0 auto 10px auto; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3>🌙 Astronomical Observer #56</h3>
+    <span class="loc-badge">Location: Basra, Iraq (30.5°N, 47.8°E)</span>
+    <h3>🌙 Basra Moon Tracker #57</h3>
 
     <div class="input-section">
-        <label style="display:block; font-size:0.8rem; color:#94a3b8; margin-bottom:5px;">Target Date & Time:</label>
+        <label style="display:block; font-size:0.8rem; color:#94a3b8; margin-bottom:5px;">Select Date & Time:</label>
         <input type="datetime-local" id="userDate" step="1">
     </div>
     
-    <button class="btn" onclick="calculate56()">Calculate for Selected Date</button>
+    <button class="btn" onclick="calculate57()">Sync with Basra Horizon</button>
 
     <div id="results" class="res-grid" style="display:none;">
-        <div class="item">
-            <span class="label">Target Time:</span> 
-            <span id="res_time" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Sunset (on that day):</span> 
-            <span id="res_sunset" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Moon Age:</span> 
-            <span id="res_age" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Moon Altitude:</span> 
-            <span id="res_alt" class="val"></span>
-        </div>
-        <div class="item">
-            <span class="label">Elongation:</span> 
-            <span id="res_elo" class="val"></span>
-        </div>
-        <div class="item" style="border:none;">
-            <span class="label">Visibility Status:</span> 
-            <span id="res_status" style="font-weight:bold;"></span>
-        </div>
+        <div class="item"><span class="label">Target Time:</span> <span id="res_time" class="val"></span></div>
+        <div class="item"><span class="label">Sunset (Basra):</span> <span id="res_sunset" class="val"></span></div>
+        <div class="item"><span class="label">Moon Age:</span> <span id="res_age" class="val"></span></div>
+        <div class="item"><span class="label">Moon Altitude:</span> <span id="res_alt" class="val"></span></div>
+        <div class="item"><span class="label">Elongation:</span> <span id="res_elo" class="val"></span></div>
+        <div class="item" style="border:none;"><span class="label">Visibility:</span> <span id="res_status" style="font-weight:bold;"></span></div>
     </div>
 </div>
 
 <script>
-    // تعيين التاريخ الحالي كافتراضي عند التحميل
     window.onload = function() {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('userDate').value = now.toISOString().slice(0, 19);
     };
 
-    function calculate56() {
-        try {
-            // 1. الحصول على التاريخ المختار من الواجهة
-            const userIn = document.getElementById('userDate').value;
-            if (!userIn) return alert("Please select a date first");
-            const targetDate = new Date(userIn);
+    function calculate57() {
+        const userIn = document.getElementById('userDate').value;
+        const targetDate = new Date(userIn);
+        
+        // 1. حساب وقت الغروب للبصرة (Basra)
+        // في 18 فبراير بالبصرة، الغروب الفعلي يكون حوالي 5:42 PM
+        // معادلة محسنة تعتمد على خط العرض 30.5 واليوم من السنة
+        const startOfYear = new Date(targetDate.getFullYear(), 0, 0);
+        const dayOfYear = Math.floor((targetDate - startOfYear) / 86400000);
+        
+        // حساب الانحراف الشمسي التقريبي
+        const declination = -23.44 * Math.cos((360 / 365) * (dayOfYear + 10) * Math.PI / 180);
+        // حساب ساعة الغروب بناءً على خط عرض البصرة
+        const hourAngle = Math.acos(-Math.tan(30.5 * Math.PI / 180) * Math.tan(declination * Math.PI / 180)) * 180 / Math.PI;
+        const sunsetLocal = 12 + (hourAngle / 15) + (45 - 47.8) / 15 + 3; // تصحيح خط الطول والمنطقة الزمنية
+        
+        const sunsetDate = new Date(targetDate);
+        sunsetDate.setHours(Math.floor(sunsetLocal), (sunsetLocal % 1 * 60), 0);
 
-            // 2. حساب الغروب الديناميكي نسبةً للتاريخ المختار
-            // قمنا ببرمجة دالة تزيح وقت الغروب بناءً على فصول السنة (تقديري للبصرة)
-            const dayOfYear = Math.floor((targetDate - new Date(targetDate.getFullYear(), 0, 0)) / 86400000);
-            const sunsetHour = 17 + (Math.sin((dayOfYear - 80) * 2 * Math.PI / 365) * 0.5); // معادلة تذبذب وقت الغروب
-            const sunsetDate = new Date(targetDate);
-            sunsetDate.setHours(Math.floor(sunsetHour), (sunsetHour % 1 * 60), 0);
+        // 2. حساب عمر القمر
+        const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z");
+        let diffMs = targetDate - KNOWN_NEW_MOON;
+        const cycleMs = 29.53059 * 86400000;
+        diffMs = ((diffMs % cycleMs) + cycleMs) % cycleMs;
 
-            // 3. حساب عمر القمر نسبةً للتاريخ المختار
-            const KNOWN_NEW_MOON = new Date("2026-02-17T15:01:00Z");
-            let diffMs = targetDate - KNOWN_NEW_MOON;
-            
-            // تصحيح الدورة القمرية إذا كان التاريخ المختار قديماً أو مستقبلياً
-            const cycleMs = 29.53059 * 86400000;
-            diffMs = ((diffMs % cycleMs) + cycleMs) % cycleMs;
+        const d = Math.floor(diffMs / 86400000);
+        const h = Math.floor((diffMs % 86400000) / 3600000);
+        const m = Math.floor((diffMs % 3600000) / 60000);
 
-            const totalMin = Math.floor(diffMs / 60000);
-            const d = Math.floor(totalMin / 1440);
-            const h = Math.floor((totalMin % 1440) / 60);
-            const m = totalMin % 60;
+        // 3. البعد الزاوي والارتفاع (معايرة مع Daff Moon)
+        const elongation = (diffMs / 86400000) * 12.19;
+        
+        // الارتفاع يتناقص بسرعة بعد الغروب بمعدل 15 درجة في الساعة
+        const timeFromSunset = (targetDate - sunsetDate) / 3600000;
+        let altitude = (elongation * 0.85) - (timeFromSunset * 14.5);
 
-            // 4. البعد الزاوي (Elongation) المرتبط بالتاريخ المختار
-            const elongation = (diffMs / 86400000) * 12.19;
-
-            // 5. الارتفاع (Altitude) - معادلة ديناميكية تعتمد على الوقت المختار
-            // تحاكي حركة القمر خلال ساعات اليوم
-            const hourDiff = (targetDate - sunsetDate) / 3600000;
-            const altitude = 10 + (diffMs / 86400000 * 5) - (Math.abs(hourDiff) * 15);
-
-            // عرض النتائج النهائية
-            document.getElementById('res_time').innerText = targetDate.toLocaleString('en-US', { hour12: true });
-            document.getElementById('res_sunset').innerText = sunsetDate.toLocaleTimeString('en-US', { hour12: true });
-            document.getElementById('res_age').innerText = `${d}d ${h}h ${m}m`;
-            document.getElementById('res_alt').innerText = altitude.toFixed(2) + "°";
-            document.getElementById('res_elo').innerText = elongation.toFixed(2) + "°";
-            
-            const status = document.getElementById('res_status');
-            const isVisible = elongation > 8 && altitude > 0;
-            status.innerText = isVisible ? "Visibility Possible" : "Invisible / Low Altitude";
-            status.style.color = isVisible ? "#4ade80" : "#fbbf24";
-
-            document.getElementById('results').style.display = 'block';
-
-        } catch (e) {
-            alert("Calculation Error: " + e.message);
-        }
+        // العرض
+        document.getElementById('res_time').innerText = targetDate.toLocaleString('en-US', { hour12: true });
+        document.getElementById('res_sunset').innerText = sunsetDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('res_age').innerText = `${d}d ${h}h ${m}m`;
+        document.getElementById('res_alt').innerText = altitude.toFixed(2) + "°";
+        document.getElementById('res_elo').innerText = elongation.toFixed(2) + "°";
+        
+        const status = document.getElementById('res_status');
+        const isVisible = elongation > 8 && altitude > 0;
+        status.innerText = isVisible ? "Likely Visible" : "Not Visible";
+        status.style.color = isVisible ? "#4ade80" : "#fbbf24";
+        document.getElementById('results').style.display = 'block';
     }
 </script>
-
 </body>
 </html>
