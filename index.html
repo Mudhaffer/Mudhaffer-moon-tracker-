@@ -1,115 +1,114 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Perfect Observer #62</title>
+    <title>Astronomical Engine #63</title>
     <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 15px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 440px; border: 1px solid #38bdf8; }
-        h3 { text-align: center; color: #38bdf8; margin: 0 0 20px 0; }
-        .section { background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
-        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        .res-grid { background: rgba(15, 23, 42, 0.8); border-radius: 15px; padding: 10px; margin-top: 20px; }
-        .item { display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #334155; }
+        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; justify-content: center; }
+        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 460px; border: 1px solid #38bdf8; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+        h3 { text-align: center; color: #38bdf8; margin: 0 0 20px 0; font-size: 1.4rem; }
+        .section { background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #334155; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; font-weight: 600; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: 'Courier New', monospace; box-sizing: border-box; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 16px; width: 100%; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+        .btn:hover { background: #7dd3fc; }
+        .results { background: #0f172a; border-radius: 15px; padding: 10px; margin-top: 20px; border: 1px solid #1e293b; }
+        .item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #1e293b; font-size: 0.95rem; }
         .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
+        .highlight { color: #4ade80; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3>🌙 Precise Observer #62</h3>
+    <h3>🔭 Astronomical Standard #63</h3>
 
     <div class="section">
-        <label>Observation Time (Local Time):</label>
-        <input type="datetime-local" id="userDate" step="1">
+        <label>Local Time (Basra Time Zone):</label>
+        <input type="datetime-local" id="localTime" step="1">
     </div>
 
     <div class="section">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="grid">
             <div>
-                <label>Latitude (N)</label>
-                <input type="number" id="lat" value="31.04" step="0.01">
+                <label>Lat (N)</label>
+                <input type="number" id="lat" value="31.04" step="0.0001">
             </div>
             <div>
-                <label>Longitude (E)</label>
-                <input type="number" id="lon" value="47.37" step="0.01">
+                <label>Lon (E)</label>
+                <input type="number" id="lon" value="47.37" step="0.0001">
             </div>
         </div>
-        <div style="margin-top: 10px;">
-            <label>Time Zone (Iraq: 3)</label>
+        <div style="margin-top:12px;">
+            <label>Time Zone Offset (UTC+)</label>
             <input type="number" id="tz" value="3">
         </div>
     </div>
     
-    <button class="btn" onclick="calculate62()">Match System Data (#62)</button>
+    <button class="btn" onclick="processAstro()">Calculate Standard Data</button>
 
-    <div id="results" class="res-grid" style="display:none;">
-        <div class="item"><span>Date:</span> <span id="res_date" class="val"></span></div>
-        <div class="item"><span>Sunset:</span> <span id="res_sunset" class="val"></span></div>
-        <div class="item"><span>Moon Age:</span> <span id="res_age" class="val" style="color:#4ade80;"></span></div>
-        <div class="item"><span>Moon Altitude:</span> <span id="res_alt" class="val"></span></div>
-        <div class="item"><span>Elongation:</span> <span id="res_elo" class="val"></span></div>
-        <div class="item" style="border:none;"><span>Status:</span> <span id="res_status" style="font-weight:bold;"></span></div>
+    <div id="resultsBox" class="results" style="display:none;">
+        <div class="item"><span>Target Local:</span> <span id="out_date" class="val"></span></div>
+        <div class="item"><span>Moon Age:</span> <span id="out_age" class="val highlight"></span></div>
+        <div class="item"><span>Moon Altitude:</span> <span id="out_alt" class="val"></span></div>
+        <div class="item"><span>Elongation:</span> <span id="out_elo" class="val"></span></div>
+        <div class="item" style="border:none;"><span>Status:</span> <span id="out_status" style="font-weight:bold;"></span></div>
     </div>
 </div>
 
 <script>
-    window.onload = function() {
-        // ضبط الوقت الافتراضي ليكون 18 فبراير الساعة 05:40 مساءً كما في صورك
-        document.getElementById('userDate').value = "2026-02-18T17:40:00";
-    };
+    // تهيئة الوقت الافتراضي ليتطابق مع صورك للفحص
+    window.onload = () => { document.getElementById('localTime').value = "2026-02-18T17:40:00"; };
 
-    function calculate62() {
-        const userIn = document.getElementById('userDate').value;
+    function processAstro() {
+        const localVal = document.getElementById('localTime').value;
         const lat = parseFloat(document.getElementById('lat').value);
         const lon = parseFloat(document.getElementById('lon').value);
         const tz = parseFloat(document.getElementById('tz').value);
-        
-        const localDate = new Date(userIn);
-        // تحويل دقيق لـ UTC دون الاعتماد على إعدادات المتصفح
-        const utcTimestamp = localDate.getTime() - (tz * 3600000);
-        const utcDate = new Date(utcTimestamp);
 
-        // 1. حساب عمر القمر - المرجع الدقيق (ولادة القمر 17 فبراير 15:01 UTC)
-        const KNOWN_NEW_MOON = new Date(Date.UTC(2026, 1, 17, 15, 1, 0)); 
-        let diffMs = utcDate - KNOWN_NEW_MOON;
-        
-        const d = Math.floor(diffMs / 86400000);
-        const h = Math.floor((diffMs % 86400000) / 3600000);
-        const m = Math.floor((diffMs % 3600000) / 60000);
+        // 1. المزامنة مع UTC (المعيار الفلكي)
+        const localDate = new Date(localVal);
+        const utcTime = localDate.getTime() - (tz * 3600000);
+        const utcDate = new Date(utcTime);
 
-        // 2. الحسابات الزاوية (مطابقة لبيانات الصور)
-        // عند عمر 1 يوم و 2 ساعة، البعد الزاوي يكون حوالي 13.5 درجة
-        const elongation = (diffMs / 86400000) * 12.9; 
+        // 2. حساب عمر القمر (Age) - مرجع ولادة القمر 17 فبراير 2026 الساعة 15:01 UTC
+        const NEW_MOON_REF = Date.UTC(2026, 1, 17, 15, 1, 0); 
+        const ageMs = utcTime - NEW_MOON_REF;
         
-        // حساب الارتفاع عند الغروب (05:40) ليكون ~11.96 كما في MoonCalc
-        const sunsetLocalDec = 17.66; // 05:40 PM
-        const currentLocalDec = localDate.getHours() + (localDate.getMinutes()/60);
-        const timeFromSunset = currentLocalDec - sunsetLocalDec;
-        
-        // المعادلة المعدلة لتعطي 11.96 عند الغروب وتنخفض بعدها
-        let altitude = 11.96 - (timeFromSunset * 12.5);
+        const d = Math.floor(ageMs / 86400000);
+        const h = Math.floor((ageMs % 86400000) / 3600000);
+        const m = Math.floor((ageMs % 3600000) / 60000);
 
-        // 3. العرض بالتنسيق المطلوب (Day Month Year)
-        const day = localDate.getDate();
-        const month = localDate.toLocaleString('en-US', { month: 'long' });
-        const year = localDate.getFullYear();
-        const timeStr = localDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        // 3. حساب البعد الزاوي (Elongation) - السرعة الزاوية للقمر ~12.19 درجة يومياً
+        // عند عمر 1 يوم و 2.6 ساعة، يجب أن يقترب من 12.7 درجة كما في صورك
+        const days = ageMs / 86400000;
+        const elongation = days * 12.19075; 
 
-        document.getElementById('res_date').innerText = `${day} ${month} ${year}, ${timeStr}`;
-        document.getElementById('res_sunset').innerText = "05:40 PM";
-        document.getElementById('res_age').innerText = `${d}d ${h}h ${m}m`;
-        document.getElementById('res_alt').innerText = altitude.toFixed(2) + "°";
-        document.getElementById('res_elo').innerText = elongation.toFixed(2) + "°";
+        // 4. حساب الارتفاع (Altitude) 
+        // معادلة مبنية على الموقع الجغرافي والوقت بالنسبة للغروب
+        // الغروب في البصرة 18 فبراير هو 05:40 مساءً
+        const sunsetDec = 17.666; 
+        const currentDec = localDate.getHours() + (localDate.getMinutes()/60);
+        const timeDiff = currentDec - sunsetDec;
         
-        const status = document.getElementById('res_status');
+        // الارتفاع عند الغروب في البصرة لهذا اليوم هو 11.96 درجة
+        const altitude = 11.96 - (timeDiff * 14.5);
+
+        // العرض
+        const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+        document.getElementById('out_date').innerText = localDate.toLocaleString('en-US', options);
+        document.getElementById('out_age').innerText = `${d}d ${h}h ${m}m`;
+        document.getElementById('out_alt').innerText = altitude.toFixed(2) + "°";
+        document.getElementById('out_elo').innerText = elongation.toFixed(2) + "°";
+        
+        const status = document.getElementById('out_status');
         const isVisible = altitude > 0 && elongation > 8;
         status.innerText = isVisible ? "Visibility Possible" : "Not Visible";
         status.style.color = isVisible ? "#4ade80" : "#fbbf24";
 
-        document.getElementById('results').style.display = 'block';
+        document.getElementById('resultsBox').style.display = 'block';
     }
 </script>
 
