@@ -39,7 +39,7 @@
   function calculate() {
     const lat = parseFloat(document.getElementById('lat').value);
     const lon = parseFloat(document.getElementById('lon').value);
-    const now = new Date();
+    const date = new Date();
 
     if (isNaN(lat) || isNaN(lon)) {
         alert("يرجى تحديد الموقع أولاً!");
@@ -47,25 +47,23 @@
     }
 
     try {
-        // دعنا نفحص ما هو موجود فعلياً داخل كائن Astronomy
-        console.log("الدوال المتاحة في Astronomy:", Object.keys(Astronomy));
+        // إنشاء كائن الوقت المطلوب للمكتبة
+        const time = Astronomy.MakeTime(date);
         
-        // محاولة استخدام الدالة البديلة الأكثر شيوعاً في هذه المكتبة
-        // إذا لم تكن MoonPosition، فغالباً هي Moon_Position أو Moon
-        const moonPos = Astronomy.MoonPosition ? Astronomy.MoonPosition(now) : Astronomy.Moon_Position(now);
-        const sunPos = Astronomy.SunPosition ? Astronomy.SunPosition(now) : Astronomy.Sun_Position(now);
+        // حساب الإحداثيات الأفقية (الارتفاع والسمت)
+        const hor = Astronomy.Horizon(time, lat, lon, 0);
         
-        // حساب الإحداثيات الأفقية
-        const observer = new Astronomy.Observer(lat, lon, 0);
-        const horizon = Astronomy.Horizon(now, lat, lon, 0);
+        // حساب الاستطالة (الزاوية بين الشمس والقمر)
+        const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
 
+        // عرض النتائج
         document.getElementById('resultDisplay').innerHTML = `
-            <p>ارتفاع القمر: ${horizon.altitude.toFixed(2)}°</p>
-            <p>الاستطالة: ${Astronomy.AngleBetween(sunPos.ra, sunPos.dec, moonPos.ra, moonPos.dec).toFixed(2)}°</p>
+            <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
+            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
         `;
     } catch (e) {
-        document.getElementById('resultDisplay').innerHTML = "خطأ: " + e.message;
-        console.error("تفاصيل الخطأ:", e);
+        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
+        console.error(e);
     }
 }
 </script>
