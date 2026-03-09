@@ -36,37 +36,39 @@
         }
     }
 
-    function calculate() {
+   function calculate() {
     const lat = parseFloat(document.getElementById('lat').value);
     const lon = parseFloat(document.getElementById('lon').value);
     const now = new Date();
 
-    if (isNaN(lat) || isNaN(lon)) {
-        alert("يرجى تحديد الموقع أولاً!");
+    // فحص سريع للتحقق من وجود الدوال
+    if (typeof Astronomy === 'undefined') {
+        document.getElementById('resultDisplay').innerText = "المكتبة لم تُحمل!";
         return;
     }
 
     try {
-        // 1. إنشاء كائن المراقب (هذا هو الجزء الذي كان يسبب الخطأ)
-        const observer = new Astronomy.Observer(lat, lon, 0);
-
-        // 2. استخدام دالة Horizon الصحيحة التي تقبل كائن Observer
-        // نستخدم Astronomy.Equator للحصول على RA/Dec ثم نحولها للأفق
-        const equMoon = Astronomy.MoonPosition(now);
-        const horMoon = Astronomy.Horizon(now, observer.latitude, observer.longitude, 0, equMoon.ra, equMoon.dec);
+        // بدلاً من MoonPosition، سنستخدم دالة التوقيت الفلكي المباشرة
+        // في بعض نسخ المتصفح، قد تكون الدوال تحت Astronomy.Astronomy
+        const time = Astronomy.MakeTime(now);
         
-        // 3. حساب الاستطالة
-        const sun = Astronomy.SunPosition(now);
-        const moon = Astronomy.MoonPosition(now);
+        // حساب موقع القمر والشمس
+        const moon = Astronomy.MoonPosition(time);
+        const sun = Astronomy.SunPosition(time);
+        
+        // حساب الأفق (Horizon)
+        const horizon = Astronomy.Horizon(time, lat, lon, 0);
+
+        // حساب الزاوية بينهما
         const elongation = Astronomy.AngleBetween(sun.ra, sun.dec, moon.ra, moon.dec);
 
         document.getElementById('resultDisplay').innerHTML = `
-            <p>ارتفاع القمر: ${horMoon.altitude.toFixed(2)}°</p>
+            <p>ارتفاع القمر: ${horizon.altitude.toFixed(2)}°</p>
             <p>الاستطالة: ${elongation.toFixed(2)}°</p>
         `;
     } catch (e) {
-        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.toString();
-        console.error(e);
+        document.getElementById('resultDisplay').innerHTML = "خطأ: " + e.message;
+        console.log("هيكل Astronomy:", Astronomy); // هذا سيظهر لنا الدوال المتاحة في الـ Console
     }
 }
 </script>
