@@ -36,39 +36,36 @@
         }
     }
 
-   function calculate() {
+  function calculate() {
     const lat = parseFloat(document.getElementById('lat').value);
     const lon = parseFloat(document.getElementById('lon').value);
     const now = new Date();
 
-    // فحص سريع للتحقق من وجود الدوال
-    if (typeof Astronomy === 'undefined') {
-        document.getElementById('resultDisplay').innerText = "المكتبة لم تُحمل!";
+    if (isNaN(lat) || isNaN(lon)) {
+        alert("يرجى تحديد الموقع أولاً!");
         return;
     }
 
     try {
-        // بدلاً من MoonPosition، سنستخدم دالة التوقيت الفلكي المباشرة
-        // في بعض نسخ المتصفح، قد تكون الدوال تحت Astronomy.Astronomy
-        const time = Astronomy.MakeTime(now);
+        // دعنا نفحص ما هو موجود فعلياً داخل كائن Astronomy
+        console.log("الدوال المتاحة في Astronomy:", Object.keys(Astronomy));
         
-        // حساب موقع القمر والشمس
-        const moon = Astronomy.MoonPosition(time);
-        const sun = Astronomy.SunPosition(time);
+        // محاولة استخدام الدالة البديلة الأكثر شيوعاً في هذه المكتبة
+        // إذا لم تكن MoonPosition، فغالباً هي Moon_Position أو Moon
+        const moonPos = Astronomy.MoonPosition ? Astronomy.MoonPosition(now) : Astronomy.Moon_Position(now);
+        const sunPos = Astronomy.SunPosition ? Astronomy.SunPosition(now) : Astronomy.Sun_Position(now);
         
-        // حساب الأفق (Horizon)
-        const horizon = Astronomy.Horizon(time, lat, lon, 0);
-
-        // حساب الزاوية بينهما
-        const elongation = Astronomy.AngleBetween(sun.ra, sun.dec, moon.ra, moon.dec);
+        // حساب الإحداثيات الأفقية
+        const observer = new Astronomy.Observer(lat, lon, 0);
+        const horizon = Astronomy.Horizon(now, lat, lon, 0);
 
         document.getElementById('resultDisplay').innerHTML = `
             <p>ارتفاع القمر: ${horizon.altitude.toFixed(2)}°</p>
-            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
+            <p>الاستطالة: ${Astronomy.AngleBetween(sunPos.ra, sunPos.dec, moonPos.ra, moonPos.dec).toFixed(2)}°</p>
         `;
     } catch (e) {
         document.getElementById('resultDisplay').innerHTML = "خطأ: " + e.message;
-        console.log("هيكل Astronomy:", Astronomy); // هذا سيظهر لنا الدوال المتاحة في الـ Console
+        console.error("تفاصيل الخطأ:", e);
     }
 }
 </script>
