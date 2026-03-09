@@ -2,14 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>حساب بيانات الهلال</title>
+    <title>حساب بيانات الهلال المتقدم</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
         .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-geo { background: #2ecc71; margin-bottom: 15px; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; box-sizing: border-box; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; margin-top: 5px; box-sizing: border-box; }
         #resultDisplay { margin-top: 20px; padding: 15px; background: #0f172a; border: 1px solid #334155; text-align: center; border-radius: 10px; }
     </style>
 </head>
@@ -17,16 +17,24 @@
 
 <div class="card">
     <h2>🌙 حساب بيانات الهلال</h2>
-    <button class="btn btn-geo" onclick="getUserLocation()">📍 تحديد موقعي تلقائياً</button>
+    
+    <label>التاريخ والوقت:</label>
+    <input type="datetime-local" id="observationTime">
+    
+    <button class="btn btn-geo" onclick="getUserLocation()">📍 موقعي</button>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <input type="number" id="lat" placeholder="خط العرض" step="any">
         <input type="number" id="lon" placeholder="خط الطول" step="any">
     </div>
-    <button class="btn" onclick="calculate()">عرض النتائج الآن</button>
+    
+    <button class="btn" onclick="calculate()">عرض النتائج</button>
     <div id="resultDisplay">النتائج ستظهر هنا...</div>
 </div>
 
 <script>
+    // تعيين الوقت الافتراضي للآن عند فتح الصفحة
+    document.getElementById('observationTime').value = new Date().toISOString().slice(0, 16);
+
     function getUserLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
@@ -39,21 +47,18 @@
     function calculate() {
         const lat = parseFloat(document.getElementById('lat').value);
         const lon = parseFloat(document.getElementById('lon').value);
-        const now = new Date();
+        const obsDate = new Date(document.getElementById('observationTime').value);
 
-        if (isNaN(lat) || isNaN(lon)) {
-            alert("يرجى تحديد الموقع أولاً!");
-            return;
-        }
+        if (isNaN(lat) || isNaN(lon)) { alert("يرجى تحديد الموقع!"); return; }
 
-        // استخدام SunCalc للحسابات الفلكية
-        const moonPos = SunCalc.getMoonPosition(now, lat, lon);
-        const sunPos = SunCalc.getPosition(now, lat, lon);
+        // حسابات فلكية باستخدام SunCalc
+        const moonPos = SunCalc.getMoonPosition(obsDate, lat, lon);
+        const sunPos = SunCalc.getPosition(obsDate, lat, lon);
         
-        // تحويل الارتفاع من راديان إلى درجات
+        // حساب عمر الهلال (تقريبي: الوقت منذ آخر اقتران)
+        const lastNewMoon = SunCalc.getMoonIllumination(obsDate).phase * 29.53; 
+        
         const altDeg = moonPos.altitude * (180 / Math.PI);
-        
-        // حساب الاستطالة (الزاوية بين الشمس والقمر)
         const elongation = Math.acos(
             Math.sin(moonPos.altitude) * Math.sin(sunPos.altitude) + 
             Math.cos(moonPos.altitude) * Math.cos(sunPos.altitude) * Math.cos(moonPos.azimuth - sunPos.azimuth)
@@ -62,6 +67,7 @@
         document.getElementById('resultDisplay').innerHTML = `
             <p>ارتفاع القمر: ${altDeg.toFixed(2)}°</p>
             <p>الاستطالة: ${elongation.toFixed(2)}°</p>
+            <p>عمر الهلال التقريبي: ${lastNewMoon.toFixed(1)} يوم</p>
         `;
     }
 </script>
