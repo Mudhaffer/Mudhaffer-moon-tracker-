@@ -1,44 +1,55 @@
-function getUserLocation() {
-    // التأكد من أن المتصفح يدعم خاصية تحديد الموقع
-    if (!navigator.geolocation) {
-        alert("عذراً، متصفحك لا يدعم خاصية تحديد الموقع.");
-        return;
-    }
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>حساب بيانات الهلال</title>
+    <style>
+        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; justify-content: center; }
+        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
+        .header { text-align: center; border-bottom: 1px solid #334155; margin-bottom: 20px; padding-bottom: 10px; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-geo { background: #2ecc71; margin-bottom: 15px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; box-sizing: border-box; }
+    </style>
+</head>
+<body>
 
-    // خيارات الدقة العالية
-    const options = {
-        enableHighAccuracy: true, // تفعيل الدقة العالية (GPS)
-        timeout: 5000,           // مدة الانتظار 5 ثوانٍ
-        maximumAge: 0            // عدم استخدام موقع قديم مخزن
-    };
+<div class="card">
+    <div class="header">
+        <h2>🌙 حساب بيانات الهلال</h2>
+    </div>
 
-    navigator.geolocation.getCurrentPosition(success, error, options);
+    <button type="button" class="btn btn-geo" onclick="getUserLocation()">📍 تحديد موقعي تلقائياً</button>
 
-    function success(position) {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+    <div class="grid-3">
+        <input type="number" id="lat" placeholder="خط العرض (Latitude)" step="any">
+        <input type="number" id="lon" placeholder="خط الطول (Longitude)" step="any">
+    </div>
 
-        // تحديث قيم الحقول في الواجهة تلقائياً
-        document.getElementById('lat').value = latitude.toFixed(6);
-        document.getElementById('lon').value = longitude.toFixed(6);
-        
-        console.log(`الموقع الحالي: ${latitude}, ${longitude}`);
-        alert("تم تحديد موقعك بنجاح!");
-    }
+    <button type="button" class="btn" onclick="calculate()">عرض النتائج الآن</button>
+</div>
 
-    function error(err) {
-        switch(err.code) {
-            case err.PERMISSION_DENIED:
-                alert("يرجى السماح للتطبيق بالوصول إلى الموقع.");
-                break;
-            case err.POSITION_UNAVAILABLE:
-                alert("معلومات الموقع غير متوفرة حالياً.");
-                break;
-            case err.TIMEOUT:
-                alert("انتهت مهلة طلب الموقع، حاول مرة أخرى.");
-                break;
-            default:
-                alert("حدث خطأ غير معروف في تحديد الموقع.");
+<script>
+    function getUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById('lat').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('lon').value = position.coords.longitude.toFixed(6);
+                    alert("تم تحديد موقعك بنجاح!");
+                },
+                () => { alert("تعذر الحصول على الموقع، يرجى تفعيل الصلاحية."); }
+            );
+        } else {
+            alert("المتصفح لا يدعم تحديد الموقع.");
         }
     }
-}
+
+    function calculate() {
+        alert("جاري تجهيز الخوارزمية لربطها ببيانات القمر...");
+    }
+</script>
+
+</body>
+</html>
