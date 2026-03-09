@@ -1,126 +1,44 @@
+function getUserLocation() {
+    // التأكد من أن المتصفح يدعم خاصية تحديد الموقع
+    if (!navigator.geolocation) {
+        alert("عذراً، متصفحك لا يدعم خاصية تحديد الموقع.");
+        return;
+    }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Standard Astro Observer #67</title>
-    <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
-        .header { text-align: center; border-bottom: 1px solid #334155; margin-bottom: 20px; padding-bottom: 10px; }
-        .header h2 { margin: 0; color: #38bdf8; }
-        .input-group { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        label { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; font-family: monospace; box-sizing: border-box; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-sunset { background: #f59e0b; margin-top: 5px; }
-        .results { background: #0f172a; border-radius: 15px; padding: 10px; margin-top: 20px; border: 1px solid #334155; }
-        .item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #1e293b; }
-        .val { color: #38bdf8; font-weight: bold; font-family: 'Courier New', monospace; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="header">
-        <h2>📍 Basra Observatory</h2>
-        <small id="coordsDisplay">31.04°N, 47.37°E</small>
-    </div>
-
-    <div class="input-group">
-        <label>Date & Time (Local)</label>
-        <input type="datetime-local" id="userDate">
-        <div class="grid-3" style="margin-top:10px;">
-            <div><label>Lat</label><input type="number" id="lat" value="31.04"></div>
-            <div><label>Lon</label><input type="number" id="lon" value="47.37"></div>
-            <div><label>UTC+</label><input type="number" id="tz" value="3"></div>
-        </div>
-        <button class="btn" onclick="calculate()">Calculate Accurate Data</button>
-        <button class="btn btn-sunset" onclick="setSunset()">Set to Sunset Time</button>
-    </div>
-
-    <div id="resBox" class="results" style="display:none;">
-        <div class="item"><span>Actual Sunset:</span> <span id="out_sunset" class="val"></span></div>
-        <div class="item"><span>Moon Age:</span> <span id="out_age" class="val" style="color:#4ade80;"></span></div>
-        <div class="item"><span>Moon Altitude:</span> <span id="out_alt" class="val"></span></div>
-        <div class="item"><span>Elongation:</span> <span id="out_elo" class="val"></span></div>
-    </div>
-</div>
-
-<script>
-    // تعيين الوقت الحالي عند الفتح
-    window.onload = () => {
-        let now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('userDate').value = now.toISOString().slice(0, 19);
+    // خيارات الدقة العالية
+    const options = {
+        enableHighAccuracy: true, // تفعيل الدقة العالية (GPS)
+        timeout: 5000,           // مدة الانتظار 5 ثوانٍ
+        maximumAge: 0            // عدم استخدام موقع قديم مخزن
     };
 
-    // خوارزمية فلكية معيارية لحساب وقت الغروب (ليست ثابتة)
-    function getSunset(date, lat, lon, tz) {
-        const jd = (date.getTime() / 86400000) + 2440587.5;
-        const n = Math.floor(jd - 2451545.0 + 0.0008);
-        const j_star = n - lon / 360;
-        const M = (357.5291 + 0.98560028 * j_star) % 360;
-        const C = 1.9148 * Math.sin(M * Math.PI/180) + 0.02 * Math.sin(2 * M * Math.PI/180);
-        const L = (M + C + 180 + 102.9372) % 360;
-        const j_transit = 2451545.0 + j_star + 0.0053 * Math.sin(M * Math.PI/180) - 0.0069 * Math.sin(2 * L * Math.PI/180);
-        const dec = Math.asin(Math.sin(L * Math.PI/180) * Math.sin(23.44 * Math.PI/180));
-        const cos_h = (Math.sin(-0.833 * Math.PI/180) - Math.sin(lat * Math.PI/180) * Math.sin(dec)) / (Math.cos(lat * Math.PI/180) * Math.cos(dec));
-        if (cos_h > 1) return null; // لا غروب
-        const h = Math.acos(cos_h) * 180 / Math.PI;
-        const sunset_jd = j_transit + h / 360;
-        return new Date((sunset_jd - 2440587.5) * 86400000 + (tz * 3600000));
+    navigator.geolocation.getCurrentPosition(success, error, options);
+
+    function success(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        // تحديث قيم الحقول في الواجهة تلقائياً
+        document.getElementById('lat').value = latitude.toFixed(6);
+        document.getElementById('lon').value = longitude.toFixed(6);
+        
+        console.log(`الموقع الحالي: ${latitude}, ${longitude}`);
+        alert("تم تحديد موقعك بنجاح!");
     }
 
-    function setSunset() {
-        const d = new Date(document.getElementById('userDate').value);
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-        const tz = parseFloat(document.getElementById('tz').value);
-        const sunset = getSunset(d, lat, lon, 0); // حساب UTC أولاً
-        if(sunset) {
-            const localSunset = new Date(sunset.getTime() + (tz * 3600000));
-            localSunset.setMinutes(localSunset.getMinutes() - localSunset.getTimezoneOffset());
-            document.getElementById('userDate').value = localSunset.toISOString().slice(0, 19);
-            calculate();
+    function error(err) {
+        switch(err.code) {
+            case err.PERMISSION_DENIED:
+                alert("يرجى السماح للتطبيق بالوصول إلى الموقع.");
+                break;
+            case err.POSITION_UNAVAILABLE:
+                alert("معلومات الموقع غير متوفرة حالياً.");
+                break;
+            case err.TIMEOUT:
+                alert("انتهت مهلة طلب الموقع، حاول مرة أخرى.");
+                break;
+            default:
+                alert("حدث خطأ غير معروف في تحديد الموقع.");
         }
     }
-
-    function calculate() {
-        const localDate = new Date(document.getElementById('userDate').value);
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-        const tz = parseFloat(document.getElementById('tz').value);
-
-        // 1. وقت الغروب الفعلي
-        const sunset = getSunset(localDate, lat, lon, tz);
-        document.getElementById('out_sunset').innerText = sunset ? sunset.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A";
-
-        // 2. عمر القمر (الحساب من المرجع العالمي UTC)
-        const NEW_MOON_UTC = Date.UTC(2026, 1, 17, 15, 1, 0); // 17 Feb 15:01 UTC
-        const currentUTC = localDate.getTime() - (tz * 3600000);
-        const ageMs = currentUTC - NEW_MOON_UTC;
-
-        const d = Math.floor(ageMs / 86400000);
-        const h = Math.floor((ageMs % 86400000) / 3600000);
-        const m = Math.floor((ageMs % 3600000) / 60000);
-        document.getElementById('out_age').innerText = `${d}d ${h}h ${m}m`;
-
-        // 3. الاستطالة (Elongation) - معادلة الحركة الوسطى
-        const elo = (ageMs / 86400000) * 12.19075;
-        document.getElementById('out_elo').innerText = elo.toFixed(2) + "°";
-
-        // 4. الارتفاع (Altitude) - معادلة الموقع بالنسبة للأفق
-        // نحسب فرق الوقت عن الغروب بالدقائق
-        const diffHours = (localDate - sunset) / 3600000;
-        // الارتفاع يعتمد على الاستطالة مطروحاً منها المسافة المقطوعة تحت الأفق بعد الغروب
-        const alt = (elo * 0.94) - (diffHours * 14.7); 
-        document.getElementById('out_alt').innerText = alt.toFixed(2) + "°";
-
-        document.getElementById('resBox').style.display = 'block';
-    }
-</script>
-
-</body>
-</html>
+}
