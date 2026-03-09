@@ -47,24 +47,24 @@
     }
 
     try {
-        // 1. حساب الإحداثيات الأفقية للقمر مباشرة
-        const horizon = Astronomy.Horizon(now, lat, lon, 0);
+        // 1. إنشاء كائن المراقب (هذا هو الجزء الذي كان يسبب الخطأ)
+        const observer = new Astronomy.Observer(lat, lon, 0);
+
+        // 2. استخدام دالة Horizon الصحيحة التي تقبل كائن Observer
+        // نستخدم Astronomy.Equator للحصول على RA/Dec ثم نحولها للأفق
+        const equMoon = Astronomy.MoonPosition(now);
+        const horMoon = Astronomy.Horizon(now, observer.latitude, observer.longitude, 0, equMoon.ra, equMoon.dec);
         
-        // 2. حساب موقع الشمس والقمر ككائنات
+        // 3. حساب الاستطالة
         const sun = Astronomy.SunPosition(now);
         const moon = Astronomy.MoonPosition(now);
-        
-        // 3. حساب الاستطالة (الزاوية بين الشمس والقمر)
-        // نستخدم دالة AngleBetween مع الإحداثيات الاستوائية (RA, Dec)
         const elongation = Astronomy.AngleBetween(sun.ra, sun.dec, moon.ra, moon.dec);
 
-        // 4. تحديث الواجهة
         document.getElementById('resultDisplay').innerHTML = `
-            <p>ارتفاع القمر: ${horizon.altitude.toFixed(2)}°</p>
+            <p>ارتفاع القمر: ${horMoon.altitude.toFixed(2)}°</p>
             <p>الاستطالة: ${elongation.toFixed(2)}°</p>
         `;
     } catch (e) {
-        // إذا استمر الخطأ، سنعرف السبب من هنا
         document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.toString();
         console.error(e);
     }
