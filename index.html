@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>حساب بيانات الهلال</title>
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.18/astronomy.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
         .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-geo { background: #2ecc71; margin-bottom: 15px; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; }
-        #resultDisplay { margin-top: 20px; padding: 15px; background: #0f172a; border: 1px solid #334155; text-align: center; border-radius: 10px; color: #f1f5f9; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; box-sizing: border-box; }
+        #resultDisplay { margin-top: 20px; padding: 15px; background: #0f172a; border: 1px solid #334155; text-align: center; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -30,8 +30,8 @@
     function getUserLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
-                document.getElementById('lat').value = pos.coords.latitude.toFixed(4);
-                document.getElementById('lon').value = pos.coords.longitude.toFixed(4);
+                document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
+                document.getElementById('lon').value = pos.coords.longitude.toFixed(6);
             });
         }
     }
@@ -39,32 +39,30 @@
     function calculate() {
         const lat = parseFloat(document.getElementById('lat').value);
         const lon = parseFloat(document.getElementById('lon').value);
-        const date = new Date();
+        const now = new Date();
 
         if (isNaN(lat) || isNaN(lon)) {
             alert("يرجى تحديد الموقع أولاً!");
             return;
         }
 
-        try {
-            // تحويل التاريخ إلى صيغة التوقيت الفلكي التي تتطلبها المكتبة
-            const time = Astronomy.MakeTime(date);
-            
-            // حساب الإحداثيات الأفقية مباشرة باستخدام الموقع
-            // ملاحظة: Astronomy.Horizon لا تتطلب Observer object في هذا الإصدار
-            const hor = Astronomy.Horizon(time, lat, lon, 0);
-            
-            // حساب الاستطالة (الزاوية بين الشمس والقمر)
-            const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
+        // استخدام SunCalc للحسابات الفلكية
+        const moonPos = SunCalc.getMoonPosition(now, lat, lon);
+        const sunPos = SunCalc.getPosition(now, lat, lon);
+        
+        // تحويل الارتفاع من راديان إلى درجات
+        const altDeg = moonPos.altitude * (180 / Math.PI);
+        
+        // حساب الاستطالة (الزاوية بين الشمس والقمر)
+        const elongation = Math.acos(
+            Math.sin(moonPos.altitude) * Math.sin(sunPos.altitude) + 
+            Math.cos(moonPos.altitude) * Math.cos(sunPos.altitude) * Math.cos(moonPos.azimuth - sunPos.azimuth)
+        ) * (180 / Math.PI);
 
-            document.getElementById('resultDisplay').innerHTML = `
-                <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
-                <p>الاستطالة: ${elongation.toFixed(2)}°</p>
-            `;
-        } catch (e) {
-            document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
-            console.error(e);
-        }
+        document.getElementById('resultDisplay').innerHTML = `
+            <p>ارتفاع القمر: ${altDeg.toFixed(2)}°</p>
+            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
+        `;
     }
 </script>
 </body>
