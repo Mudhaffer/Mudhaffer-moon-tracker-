@@ -5,7 +5,6 @@
     <title>حساب بيانات الهلال الاحترافي</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
-        /* (نفس التنسيق السابق مع تحسين بسيط) */
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
         .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
@@ -18,25 +17,48 @@
 
 <div class="card">
     <h2>🌙 حساب بيانات الهلال</h2>
+    
     <label>التاريخ والوقت:</label>
     <input type="datetime-local" id="observationTime">
-    <button class="btn btn-geo" onclick="getUserLocation()">📍 موقعي</button>
+    
+    <button class="btn btn-geo" onclick="getUserLocation()">📍 تحديد موقعي تلقائياً</button>
+    
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <input type="number" id="lat" placeholder="خط العرض" step="any">
         <input type="number" id="lon" placeholder="خط الطول" step="any">
     </div>
+    
     <button class="btn" onclick="calculate()">عرض النتائج</button>
     <div id="resultDisplay">النتائج ستظهر هنا...</div>
 </div>
 
 <script>
-    document.getElementById('observationTime').value = new Date().toISOString().slice(0, 16);
+    // تعيين الوقت الحالي عند تحميل الصفحة
+    window.onload = function() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('observationTime').value = now.toISOString().slice(0, 16);
+    };
 
-    // تحويل الدرجات العشرية إلى صيغة (درجة، دقيقة)
+    function getUserLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
+                    document.getElementById('lon').value = pos.coords.longitude.toFixed(6);
+                },
+                (err) => { alert("تعذر الحصول على الموقع، يرجى إدخاله يدوياً."); }
+            );
+        } else {
+            alert("متصفحك لا يدعم تحديد الموقع.");
+        }
+    }
+
     function toDMS(val) {
         const d = Math.floor(Math.abs(val));
         const m = Math.floor((Math.abs(val) - d) * 60);
-        return `${d}° ${m}'`;
+        const s = Math.floor(((Math.abs(val) - d) * 60 - m) * 60);
+        return `${d}° ${m}' ${s}"`;
     }
 
     function calculate() {
@@ -44,13 +66,18 @@
         const lon = parseFloat(document.getElementById('lon').value);
         const obsDate = new Date(document.getElementById('observationTime').value);
 
-        // تنسيق التاريخ العربي
-        const dateStr = new Intl.DateTimeFormat('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' }).format(obsDate);
+        if (isNaN(lat) || isNaN(lon)) { alert("يرجى إدخال الموقع أو تحديده!"); return; }
 
+        // تنسيق التاريخ العربي
+        const dateStr = new Intl.DateTimeFormat('ar-SA', { 
+            day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' 
+        }).format(obsDate);
+
+        // حسابات فلكية
         const moonPos = SunCalc.getMoonPosition(obsDate, lat, lon);
         const sunPos = SunCalc.getPosition(obsDate, lat, lon);
         
-        // حساب عمر الهلال بالثواني
+        // حساب عمر الهلال
         const ageInDays = SunCalc.getMoonIllumination(obsDate).phase * 29.53;
         const totalSeconds = Math.floor(ageInDays * 24 * 3600);
         const d = Math.floor(totalSeconds / 86400);
@@ -59,12 +86,13 @@
         const s = totalSeconds % 60;
 
         const altDeg = moonPos.altitude * (180 / Math.PI);
-        const elongation = Math.acos(Math.sin(moonPos.altitude) * Math.sin(sunPos.altitude) + Math.cos(moonPos.altitude) * Math.cos(sunPos.altitude) * Math.cos(moonPos.azimuth - sunPos.azimuth)) * (180 / Math.PI);
+        const elongation = Math.acos(Math.sin(moonPos.altitude) * Math.sin(sunPos.altitude) + 
+                           Math.cos(moonPos.altitude) * Math.cos(sunPos.altitude) * Math.cos(moonPos.azimuth - sunPos.azimuth)) * (180 / Math.PI);
 
         document.getElementById('resultDisplay').innerHTML = `
             <p><strong>التاريخ:</strong> ${dateStr}</p>
-            <p><strong>الموقع:</strong> خط عرض ${toDMS(lat)}، خط طول ${toDMS(lon)}</p>
-            <hr style="border:0; border-top:1px solid #334155;">
+            <p><strong>الموقع:</strong> ${toDMS(lat)}، ${toDMS(lon)}</p>
+            <hr>
             <p>ارتفاع القمر: ${altDeg.toFixed(2)}°</p>
             <p>الاستطالة: ${elongation.toFixed(2)}°</p>
             <p>عمر الهلال: ${d} يوم، ${h} ساعة، ${m} دقيقة، ${s} ثانية</p>
