@@ -37,38 +37,35 @@
     }
 
     function calculate() {
-    const lat = parseFloat(document.getElementById('lat').value);
-    const lon = parseFloat(document.getElementById('lon').value);
-    const date = new Date();
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lon = parseFloat(document.getElementById('lon').value);
+        const date = new Date();
 
-    if (isNaN(lat) || isNaN(lon)) {
-        alert("يرجى تحديد الموقع أولاً!");
-        return;
+        if (isNaN(lat) || isNaN(lon)) {
+            alert("يرجى تحديد الموقع أولاً!");
+            return;
+        }
+
+        try {
+            // تحويل التاريخ إلى صيغة التوقيت الفلكي التي تتطلبها المكتبة
+            const time = Astronomy.MakeTime(date);
+            
+            // حساب الإحداثيات الأفقية مباشرة باستخدام الموقع
+            // ملاحظة: Astronomy.Horizon لا تتطلب Observer object في هذا الإصدار
+            const hor = Astronomy.Horizon(time, lat, lon, 0);
+            
+            // حساب الاستطالة (الزاوية بين الشمس والقمر)
+            const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
+
+            document.getElementById('resultDisplay').innerHTML = `
+                <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
+                <p>الاستطالة: ${elongation.toFixed(2)}°</p>
+            `;
+        } catch (e) {
+            document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
+            console.error(e);
+        }
     }
-
-    try {
-        // بدلاً من استخدام new Astronomy.Observer، سنمرر الإحداثيات مباشرة
-        // هذه الطريقة هي الأكثر توافقاً مع نسخة المتصفح الحالية
-        const time = Astronomy.MakeTime(date);
-        
-        // حساب الارتفاع (Altitude) مباشرة من الموقع والوقت
-        const hor = Astronomy.Horizon(time, lat, lon, 0);
-        
-        // حساب الاستطالة (الزاوية بين الشمس والقمر)
-        const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
-
-        // عرض النتائج في الصفحة
-        const resultDiv = document.getElementById('resultDisplay');
-        resultDiv.innerHTML = `
-            <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
-            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
-        `;
-    } catch (e) {
-        // في حال حدوث أي خطأ، سنعرضه في الواجهة للتشخيص
-        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
-        console.error(e);
-    }
-}
 </script>
 </body>
 </html>
