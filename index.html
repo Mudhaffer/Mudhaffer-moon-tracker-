@@ -3,47 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>حساب بيانات الهلال</title>
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.18/astronomy.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.18/astronomy.browser.min.js"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
-        .header { text-align: center; border-bottom: 1px solid #334155; margin-bottom: 20px; padding-bottom: 10px; }
         .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-geo { background: #2ecc71; margin-bottom: 15px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; box-sizing: border-box; }
-        #resultDisplay { margin-top: 20px; padding: 15px; border-radius: 10px; background: #0f172a; color: #38bdf8; border: 1px solid #334155; text-align: center; }
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; }
+        #resultDisplay { margin-top: 20px; padding: 15px; background: #0f172a; border: 1px solid #334155; text-align: center; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="header">
-        <h2>🌙 حساب بيانات الهلال</h2>
+    <h2>🌙 حساب بيانات الهلال</h2>
+    <button class="btn btn-geo" onclick="getUserLocation()">📍 تحديد موقعي تلقائياً</button>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <input type="number" id="lat" placeholder="خط العرض">
+        <input type="number" id="lon" placeholder="خط الطول">
     </div>
-
-    <button type="button" class="btn btn-geo" onclick="getUserLocation()">📍 تحديد موقعي تلقائياً</button>
-
-    <div class="grid-3">
-        <input type="number" id="lat" placeholder="خط العرض" step="any">
-        <input type="number" id="lon" placeholder="خط الطول" step="any">
-    </div>
-
-    <button type="button" class="btn" onclick="calculate()">عرض النتائج الآن</button>
-
-    <div id="resultDisplay">النتائج ستظهر هنا بعد الحساب...</div>
+    <button class="btn" onclick="calculate()">عرض النتائج الآن</button>
+    <div id="resultDisplay">النتائج ستظهر هنا...</div>
 </div>
 
 <script>
     function getUserLocation() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
-                    document.getElementById('lon').value = pos.coords.longitude.toFixed(6);
-                },
-                () => { alert("تعذر الحصول على الموقع."); }
-            );
+            navigator.geolocation.getCurrentPosition(pos => {
+                document.getElementById('lat').value = pos.coords.latitude.toFixed(4);
+                document.getElementById('lon').value = pos.coords.longitude.toFixed(4);
+            });
         }
     }
 
@@ -52,28 +41,22 @@
         const lon = parseFloat(document.getElementById('lon').value);
         const now = new Date();
 
-        if (isNaN(lat) || isNaN(lon)) {
-            alert("يرجى تحديد الموقع أولاً!");
-            return;
-        }
-
         try {
-            // حساب الأفق بالنسبة للموقع
+            // حساب أفق القمر
             const horizon = Astronomy.Horizon(now, lat, lon, 0);
-            
-            // حساب الاستطالة (زاوية الشمس والقمر)
-            const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, now);
+            // حساب الاستطالة
+            const sun = Astronomy.SunPosition(now);
+            const moon = Astronomy.MoonPosition(now);
+            const elongation = Astronomy.AngleBetween(sun.ra, sun.dec, moon.ra, moon.dec);
 
-            // عرض البيانات
             document.getElementById('resultDisplay').innerHTML = `
                 <p>ارتفاع القمر: ${horizon.altitude.toFixed(2)}°</p>
                 <p>الاستطالة: ${elongation.toFixed(2)}°</p>
             `;
         } catch (e) {
-            alert("حدث خطأ أثناء الحساب، تأكد من اتصال الإنترنت.");
+            document.getElementById('resultDisplay').innerHTML = "حدث خطأ في الحساب: " + e.message;
         }
     }
 </script>
-
 </body>
 </html>
