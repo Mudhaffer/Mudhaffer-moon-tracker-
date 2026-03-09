@@ -39,7 +39,7 @@
   function calculate() {
     const lat = parseFloat(document.getElementById('lat').value);
     const lon = parseFloat(document.getElementById('lon').value);
-    const date = new Date();
+    const now = new Date();
 
     if (isNaN(lat) || isNaN(lon)) {
         alert("يرجى تحديد الموقع أولاً!");
@@ -47,23 +47,31 @@
     }
 
     try {
-        // إنشاء كائن الوقت المطلوب للمكتبة
-        const time = Astronomy.MakeTime(date);
-        
-        // حساب الإحداثيات الأفقية (الارتفاع والسمت)
-        const hor = Astronomy.Horizon(time, lat, lon, 0);
-        
-        // حساب الاستطالة (الزاوية بين الشمس والقمر)
-        const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
+        // 1. إنشاء كائن المراقب بشكل صحيح حسب متطلبات المكتبة
+        const observer = new Astronomy.Observer(lat, lon, 0);
 
-        // عرض النتائج
-        document.getElementById('resultDisplay').innerHTML = `
-            <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
-            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
-        `;
+        // 2. حساب موقع القمر والشمس باستخدام كائن المراقب
+        // ملاحظة: تأكد من دقة الدوال بناءً على إصدار المكتبة
+        const moonPos = Astronomy.MoonPosition(now);
+        const sunPos = Astronomy.SunPosition(now);
+        
+        // 3. حساب الإحداثيات الأفقية (الارتفاع) بناءً على الموقع
+        const hor = Astronomy.Horizon(now, observer.latitude, observer.longitude, 0, moonPos.ra, moonPos.dec);
+        
+        // 4. حساب الاستطالة (الزاوية بين الشمس والقمر)
+        const elongation = Astronomy.AngleBetween(sunPos.ra, sunPos.dec, moonPos.ra, moonPos.dec);
+
+        // 5. عرض النتائج
+        const resultDiv = document.getElementById('resultDisplay');
+        if (resultDiv) {
+            resultDiv.innerHTML = `
+                <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
+                <p>الاستطالة: ${elongation.toFixed(2)}°</p>
+            `;
+        }
     } catch (e) {
-        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
         console.error(e);
+        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
     }
 }
 </script>
