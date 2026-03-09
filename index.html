@@ -37,26 +37,38 @@
     }
 
     function calculate() {
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-        const now = new Date();
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lon = parseFloat(document.getElementById('lon').value);
+    const now = new Date();
 
-        try {
-            // حساب أفق القمر
-            const horizon = Astronomy.Horizon(now, lat, lon, 0);
-            // حساب الاستطالة
-            const sun = Astronomy.SunPosition(now);
-            const moon = Astronomy.MoonPosition(now);
-            const elongation = Astronomy.AngleBetween(sun.ra, sun.dec, moon.ra, moon.dec);
-
-            document.getElementById('resultDisplay').innerHTML = `
-                <p>ارتفاع القمر: ${horizon.altitude.toFixed(2)}°</p>
-                <p>الاستطالة: ${elongation.toFixed(2)}°</p>
-            `;
-        } catch (e) {
-            document.getElementById('resultDisplay').innerHTML = "حدث خطأ في الحساب: " + e.message;
-        }
+    if (isNaN(lat) || isNaN(lon)) {
+        alert("يرجى تحديد الموقع أولاً!");
+        return;
     }
+
+    try {
+        // 1. حساب الإحداثيات الأفقية للقمر مباشرة
+        const horizon = Astronomy.Horizon(now, lat, lon, 0);
+        
+        // 2. حساب موقع الشمس والقمر ككائنات
+        const sun = Astronomy.SunPosition(now);
+        const moon = Astronomy.MoonPosition(now);
+        
+        // 3. حساب الاستطالة (الزاوية بين الشمس والقمر)
+        // نستخدم دالة AngleBetween مع الإحداثيات الاستوائية (RA, Dec)
+        const elongation = Astronomy.AngleBetween(sun.ra, sun.dec, moon.ra, moon.dec);
+
+        // 4. تحديث الواجهة
+        document.getElementById('resultDisplay').innerHTML = `
+            <p>ارتفاع القمر: ${horizon.altitude.toFixed(2)}°</p>
+            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
+        `;
+    } catch (e) {
+        // إذا استمر الخطأ، سنعرف السبب من هنا
+        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.toString();
+        console.error(e);
+    }
+}
 </script>
 </body>
 </html>
