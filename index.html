@@ -37,32 +37,38 @@
     }
 
     function calculate() {
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-        const date = new Date();
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lon = parseFloat(document.getElementById('lon').value);
+    const date = new Date();
 
-        if (isNaN(lat) || isNaN(lon)) {
-            alert("يرجى تحديد الموقع أولاً!");
-            return;
-        }
-
-        try {
-            // استخدام الدوال المباشرة التي توفرها المكتبة في المتصفح
-            const time = Astronomy.MakeTime(date);
-            const hor = Astronomy.Horizon(time, lat, lon, 0);
-            
-            // حساب الاستطالة مباشرة باستخدام كائن الجسم السماوي
-            const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
-
-            document.getElementById('resultDisplay').innerHTML = `
-                <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
-                <p>الاستطالة: ${elongation.toFixed(2)}°</p>
-            `;
-        } catch (e) {
-            document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
-            console.error(e);
-        }
+    if (isNaN(lat) || isNaN(lon)) {
+        alert("يرجى تحديد الموقع أولاً!");
+        return;
     }
+
+    try {
+        // 1. إنشاء وقت الحساب
+        const time = Astronomy.MakeTime(date);
+        
+        // 2. إنشاء كائن المراقب بشكل صحيح
+        const observer = new Astronomy.Observer(lat, lon, 0);
+        
+        // 3. حساب الأفق (Horizon) باستخدام المراقب الذي أنشأناه
+        const hor = Astronomy.Horizon(time, observer.latitude, observer.longitude, 0);
+        
+        // 4. حساب الاستطالة (الزاوية بين الشمس والقمر)
+        const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
+
+        // 5. عرض النتائج
+        document.getElementById('resultDisplay').innerHTML = `
+            <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
+            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
+        `;
+    } catch (e) {
+        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
+        console.error(e);
+    }
+}
 </script>
 </body>
 </html>
