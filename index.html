@@ -10,7 +10,7 @@
         .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-geo { background: #2ecc71; margin-bottom: 15px; }
         input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; }
-        #resultDisplay { margin-top: 20px; padding: 15px; background: #0f172a; border: 1px solid #334155; text-align: center; border-radius: 10px; }
+        #resultDisplay { margin-top: 20px; padding: 15px; background: #0f172a; border: 1px solid #334155; text-align: center; border-radius: 10px; color: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -19,8 +19,8 @@
     <h2>🌙 حساب بيانات الهلال</h2>
     <button class="btn btn-geo" onclick="getUserLocation()">📍 تحديد موقعي تلقائياً</button>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <input type="number" id="lat" placeholder="خط العرض">
-        <input type="number" id="lon" placeholder="خط الطول">
+        <input type="number" id="lat" placeholder="خط العرض" step="any">
+        <input type="number" id="lon" placeholder="خط الطول" step="any">
     </div>
     <button class="btn" onclick="calculate()">عرض النتائج الآن</button>
     <div id="resultDisplay">النتائج ستظهر هنا...</div>
@@ -36,44 +36,33 @@
         }
     }
 
-  function calculate() {
-    const lat = parseFloat(document.getElementById('lat').value);
-    const lon = parseFloat(document.getElementById('lon').value);
-    const now = new Date();
+    function calculate() {
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lon = parseFloat(document.getElementById('lon').value);
+        const date = new Date();
 
-    if (isNaN(lat) || isNaN(lon)) {
-        alert("يرجى تحديد الموقع أولاً!");
-        return;
-    }
+        if (isNaN(lat) || isNaN(lon)) {
+            alert("يرجى تحديد الموقع أولاً!");
+            return;
+        }
 
-    try {
-        // 1. إنشاء كائن المراقب بشكل صحيح حسب متطلبات المكتبة
-        const observer = new Astronomy.Observer(lat, lon, 0);
+        try {
+            // استخدام الدوال المباشرة التي توفرها المكتبة في المتصفح
+            const time = Astronomy.MakeTime(date);
+            const hor = Astronomy.Horizon(time, lat, lon, 0);
+            
+            // حساب الاستطالة مباشرة باستخدام كائن الجسم السماوي
+            const elongation = Astronomy.Elongation(Astronomy.Body.Sun, Astronomy.Body.Moon, time);
 
-        // 2. حساب موقع القمر والشمس باستخدام كائن المراقب
-        // ملاحظة: تأكد من دقة الدوال بناءً على إصدار المكتبة
-        const moonPos = Astronomy.MoonPosition(now);
-        const sunPos = Astronomy.SunPosition(now);
-        
-        // 3. حساب الإحداثيات الأفقية (الارتفاع) بناءً على الموقع
-        const hor = Astronomy.Horizon(now, observer.latitude, observer.longitude, 0, moonPos.ra, moonPos.dec);
-        
-        // 4. حساب الاستطالة (الزاوية بين الشمس والقمر)
-        const elongation = Astronomy.AngleBetween(sunPos.ra, sunPos.dec, moonPos.ra, moonPos.dec);
-
-        // 5. عرض النتائج
-        const resultDiv = document.getElementById('resultDisplay');
-        if (resultDiv) {
-            resultDiv.innerHTML = `
+            document.getElementById('resultDisplay').innerHTML = `
                 <p>ارتفاع القمر: ${hor.altitude.toFixed(2)}°</p>
                 <p>الاستطالة: ${elongation.toFixed(2)}°</p>
             `;
+        } catch (e) {
+            document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
+            console.error(e);
         }
-    } catch (e) {
-        console.error(e);
-        document.getElementById('resultDisplay').innerHTML = "خطأ في الحساب: " + e.message;
     }
-}
 </script>
 </body>
 </html>
