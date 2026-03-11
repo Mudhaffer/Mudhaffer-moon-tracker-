@@ -2,86 +2,55 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>بيانات رؤية الهلال الاحترافي</title>
+    <title>بيانات رؤية الهلال</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 500px; border: 2px solid #38bdf8; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; }
-        .btn-main { background: #38bdf8; color: #0f172a; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; }
-        .result-box { margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; border: 1px solid #334155; }
-        .status-ok { color: #2ecc71; }
-        .status-bad { color: #e74c3c; }
+        body { background: #f8fafc; color: #1e293b; font-family: sans-serif; padding: 20px; }
+        .app-container { border: 3px solid #1e40af; border-radius: 20px; padding: 25px; max-width: 500px; margin: auto; background: white; }
+        h2 { text-align: center; color: #1e40af; }
+        .row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .field { flex: 1; }
+        input, select { width: 100%; padding: 10px; border: 2px solid #1e40af; border-radius: 8px; }
+        .btn-main { background: #dc2626; color: white; padding: 15px; width: 100%; border: none; border-radius: 8px; font-weight: bold; }
+        .result-panel { border: 2px solid #065f46; border-radius: 10px; padding: 15px; margin-top: 20px; }
+        .status-ok { color: green; }
+        .status-bad { color: red; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2 style="text-align:center;">🌙 بيانات رؤية الهلال</h2>
+<div class="app-container">
+    <h2>🌙 بيانات رؤية الهلال</h2>
     
     <label>التاريخ والوقت:</label>
-    <input type="datetime-local" id="dateInput" onchange="autoUpdate()">
-    
-    <div class="grid">
-        <div><label>المحافظة:</label><select id="citySelect" onchange="selectCity()"><option value="">-- اختر --</option></select></div>
-        <div><label>موعد الاقتران القادم:</label><div id="conjunctionResult" style="padding:10px; background:#1e293b; color:#fbbf24;">--</div></div>
+    <input type="datetime-local" id="dateInput">
+
+    <div class="row">
+        <div class="field">
+            <label>المحافظة:</label>
+            <select id="citySelect"><option>البصرة</option></select>
+        </div>
+        <div class="field">
+            <label>موعد الاقتران القادم:</label>
+            <input type="text" id="conjunction" disabled>
+        </div>
     </div>
 
-    <div class="grid">
-        <div><label>خط العرض (Lat):</label><input type="number" id="lat" step="any" oninput="clearCity()"></div>
-        <div><label>خط الطول (Lon):</label><input type="number" id="lon" step="any" oninput="clearCity()"></div>
+    <div class="row">
+        <div class="field"><label>Lat:</label><input type="text" id="lat"></div>
+        <div class="field"><label>Lon:</label><input type="text" id="lon"></div>
     </div>
 
-    <button class="btn-main" onclick="showResults()">إظهار النتيجة</button>
+    <button class="btn-main" onclick="calculate()">إظهار النتيجة</button>
 
-    <div id="resultsArea" class="result-box" style="display:none;">
+    <div id="results" class="result-panel">
         </div>
 </div>
 
 <script>
-    const iraqCities = [
-        { name: "البصرة", lat: 30.5081, lon: 47.7835 }, { name: "بغداد", lat: 33.3152, lon: 44.3661 },
-        { name: "كربلاء", lat: 32.6164, lon: 44.0246 }, { name: "السليمانية", lat: 35.5558, lon: 45.4350 }
-        // ... (يمكنك تكملة الـ 18 محافظة بنفس النمط)
-    ];
-
-    // تعبئة القائمة
-    const citySelect = document.getElementById('citySelect');
-    iraqCities.forEach(c => citySelect.innerHTML += `<option value='${JSON.stringify(c)}'>${c.name}</option>`);
-
-    function autoUpdate() {
-        let date = new Date(document.getElementById('dateInput').value);
-        // البحث عن الاقتران تلقائياً
-        let conj = findNextConjunction(date);
-        document.getElementById('conjunctionResult').innerText = conj ? conj.toLocaleString('ar-IQ', {dateStyle:'short', timeStyle:'short'}) : "غير متاح";
-    }
-
-    function findNextConjunction(start) {
-        let d = new Date(start);
-        for (let i = 0; i < 720; i++) { // بحث لـ 30 يوم
-            d.setHours(d.getHours() + 1);
-            let moon = SunCalc.getMoonPosition(d, 0, 0);
-            let sun = SunCalc.getPosition(d, 0, 0);
-            if (Math.abs(moon.azimuth - sun.azimuth) < 0.05) return d;
-        }
-        return null;
-    }
-
-    function selectCity() {
-        let city = JSON.parse(citySelect.value);
-        document.getElementById('lat').value = city.lat;
-        document.getElementById('lon').value = city.lon;
-    }
-
-    function clearCity() { citySelect.value = ""; }
-
-    function showResults() {
-        document.getElementById('resultsArea').style.display = 'block';
-        document.getElementById('resultsArea').innerHTML = `
-            <p>النتائج ستظهر هنا مع المقارنة اللونية...</p>
-        `;
-        // هنا سنقوم لاحقاً بإضافة منطق المقارنة مع الحدود الآمنة
+    function calculate() {
+        // سيتم دمج منطق الحساب الفلكي هنا
+        document.getElementById('results').innerHTML = "النتائج ستظهر هنا مع المقارنة اللونية...";
     }
 </script>
 </body>
