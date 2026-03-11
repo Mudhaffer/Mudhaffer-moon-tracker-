@@ -54,12 +54,10 @@
     // تهيئة الوقت: نظام 24 ساعة
     flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
 
-function setNow() {
-    const now = new Date();
-    // التاريخ فقط (بصيغة سنة-شهر-يوم)
-    flatpickr("#dateInput").setDate(now.toISOString().split('T')[0]); 
-    // الوقت فقط (بصيغة ساعات:دقائق)
-    flatpickr("#timeInput").setDate(now.getHours() + ":" + now.getMinutes());
+    function setNow() {
+        const now = new Date();
+        flatpickr("#dateInput").setDate(now);
+        flatpickr("#timeInput").setDate(now);
 }
        
     function calculate() {
