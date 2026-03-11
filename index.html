@@ -109,17 +109,62 @@
         }
     }
 
-    function calculate() {
-        const selectedDate = datePicker.selectedDates[0];
-        if (!selectedDate) return;
+   // --- الجزء الخاص بالمعادلات الفلكية داخل وسم <script> ---
 
-        // منطق بدائي تمهيداً للمعادلات الفلكية
-        document.getElementById('results-area').innerHTML = "بدء جلب إحداثيات الشمس والقمر ليوم " + selectedDate.getDate();
-        
-        // محاكاة النتائج (سيتم استبدالها بالمعادلات في الخطوة القادمة)
-        document.getElementById('sunsetTime').value = "18:05";
-        document.getElementById('conjunction').value = "Mar 13 - 10:15";
+function calculate() {
+    const selectedDate = datePicker.selectedDates[0];
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lon = parseFloat(document.getElementById('lon').value);
+
+    if (!selectedDate || isNaN(lat) || isNaN(lon)) {
+        alert("يرجى التأكد من اختيار التاريخ والإحداثيات");
+        return;
     }
+
+    // 1. حساب موعد الغروب (تقريبي بناءً على الموقع والتاريخ)
+    const sunset = calculateSunset(selectedDate, lat, lon);
+    document.getElementById('sunsetTime').value = sunset;
+
+    // 2. حساب موعد الاقتران المركزي (New Moon)
+    const conjunctionDate = calculateNextConjunction(selectedDate);
+    const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    document.getElementById('conjunction').value = conjunctionDate.toLocaleString('en-US', options);
+
+    document.getElementById('results-area').innerHTML = "تم تحديث الحسابات بناءً على خوارزميات Meeus الفلكية.";
+}
+
+// دالة مبسطة لحساب الاقتران المركزي القادم
+function calculateNextConjunction(date) {
+    const d = new Date(date);
+    // متوسط طول الشهر القمري بالأيام
+    const synodicMonth = 29.530588853;
+    // نقطة مرجعية لاقتران معروف (مثلاً 6 Jan 2000)
+    const referenceDate = new Date("2000-01-06T18:14:00Z");
+    
+    let diffDays = (d - referenceDate) / (1000 * 60 * 60 * 24);
+    let lunations = Math.ceil(diffDays / synodicMonth);
+    
+    let nextConjunctionMs = referenceDate.getTime() + (lunations * synodicMonth * 24 * 60 * 60 * 1000);
+    return new Date(nextConjunctionMs);
+}
+
+// دالة حساب وقت الغروب المحلي
+function calculateSunset(date, lat, lon) {
+    const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+    const gamma = (2 * Math.PI / 365) * (dayOfYear - 1 + (12 - 12) / 24);
+    const eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
+    const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma);
+    
+    const ha = Math.acos(Math.cos(90.833 * Math.PI / 180) / (Math.cos(lat * Math.PI / 180) * Math.cos(decl)) - Math.tan(lat * Math.PI / 180) * Math.tan(decl));
+    const sunsetUtc = 720 + 4 * (-lon - (ha * 180 / Math.PI)) - eqtime;
+    
+    // إضافة فرق التوقيت للعراق (UTC+3)
+    let sunsetLocal = (sunsetUtc / 60) + 3;
+    let hours = Math.floor(sunsetLocal);
+    let minutes = Math.round((sunsetLocal - hours) * 60);
+    
+    return hours.toString().padStart(2, '0') + ":" + minutes.toString().padStart(2, '0');
+}
 </script>
 </body>
 </html>
