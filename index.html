@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>بيانات رؤية الهلال</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
-        h2 { text-align: center; color: #f1f5f9; }
-        label { font-size: 0.9em; margin-bottom: 5px; display: block; }
-        input, select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; box-sizing: border-box; }
-        .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
-        .row-calc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        
+        /* جعل أيقونة التقويم واضحة */
+        .flatpickr-input { background: #0f172a !important; color: #38bdf8 !important; border: 1px solid #38bdf8 !important; }
+        
+        input, select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; }
+        .row, .row-calc { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .row-calc { grid-template-columns: 1fr 1fr 1fr; }
         .btn-loc { background: #e11d48; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
         .btn-calc { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
@@ -21,16 +25,18 @@
     <h2>🌙 بيانات رؤية الهلال</h2>
     
     <label>التاريخ والوقت:</label>
-    <input type="date" id="dateInput"> <div class="row">
-        <button class="btn-loc" onclick="getLocation()">موقع تلقائي</button>
+    <input type="text" id="dateInput" placeholder="اختر التاريخ...">
+
+    <div class="row">
+        <button class="btn-loc" onclick="getLocation()">تلقائي</button>
         <select id="citySelect"><option>البصرة</option></select>
         <input type="text" id="lat" placeholder="Lat">
         <input type="text" id="lon" placeholder="Lon">
     </div>
 
     <div class="row-calc">
-        <input type="text" id="conjunction" placeholder="موعد الاقتران القادم" disabled>
-        <input type="text" id="moonData" placeholder="بيانات الهلال بعد الغروب" disabled>
+        <input type="text" id="conjunction" placeholder="موعد الاقتران" disabled>
+        <input type="text" id="moonData" placeholder="بيانات الهلال" disabled>
         <button class="btn-calc" onclick="calculate()">إظهار النتيجة</button>
     </div>
 
@@ -38,5 +44,13 @@
         النتائج ستظهر هنا...
     </div>
 </div>
+
+<script>
+    // تفعيل تنسيق التاريخ المطلوب
+    flatpickr("#dateInput", {
+        dateFormat: "d M Y", // تنسيق DD MonthName YYYY
+        enableTime: true
+    });
+</script>
 </body>
 </html>
