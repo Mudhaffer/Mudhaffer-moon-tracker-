@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>بيانات رؤية الهلال</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
@@ -26,8 +24,8 @@
     <h2>🌙 بيانات رؤية الهلال</h2>
     
     <div class="header-row">
-        <input type="text" id="dateOnly" placeholder="التاريخ">
-        <input type="text" id="timeOnly" placeholder="الوقت">
+        <input type="date" id="dateOnly">
+        <input type="time" id="timeOnly">
         <button class="btn-now" onclick="setNow()">الآن 🕒</button>
     </div>
 
@@ -48,21 +46,15 @@
 </div>
 
 <script>
-    // تهيئة التاريخ فقط
-    flatpickr("#dateOnly", { dateFormat: "d / F / Y" });
-    
-    // تهيئة الوقت فقط
-    flatpickr("#timeOnly", { 
-        enableTime: true, 
-        noCalendar: true, 
-        dateFormat: "H:i",
-        time_24hr: true 
-    });
-
     function setNow() {
         const now = new Date();
-        flatpickr("#dateOnly").setDate(now);
-        flatpickr("#timeOnly").setDate(now);
+        // تنسيق التاريخ: YYYY-MM-DD
+        const dateStr = now.toISOString().split('T')[0];
+        // تنسيق الوقت: HH:MM
+        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        
+        document.getElementById('dateOnly').value = dateStr;
+        document.getElementById('timeOnly').value = timeStr;
     }
 
     function calculate() {
