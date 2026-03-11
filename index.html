@@ -2,53 +2,33 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>حساب الهلال الدقيق</title>
+    <title>حساب الهلال - العودة للأساسيات</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 12px; padding: 20px; width: 100%; max-width: 650px; border: 2px solid #38bdf8; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
         .row { display: grid; grid-template-columns: 1fr 1fr 100px; gap: 10px; margin-bottom: 10px; }
-        input, select { padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; }
-        .btn { padding: 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: bold; }
-        .btn-green { background: #22c55e; color: white; }
-        .btn-blue { background: #38bdf8; color: #0f172a; }
-        #results-area { border: 1px solid #334155; padding: 15px; border-radius: 5px; background: #111827; margin-top: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
+        input { padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; }
+        .btn { padding: 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: bold; background: #38bdf8; color: #0f172a; }
+        #results-area { border: 1px solid #334155; padding: 15px; border-radius: 5px; background: #111827; margin-top: 15px; text-align: center; color: #94a3b8; }
     </style>
 </head>
-<body onload="init()">
-
+<body>
 <div class="card">
-    <h2 style="text-align:center">🌙 بيانات رؤية الهلال</h2>
-    
+    <h2 style="text-align:center">🌙 بيانات رؤية الهلال (النسخة الأساسية)</h2>
     <div class="row">
-        <input type="text" id="timeInput" placeholder="الوقت">
         <input type="text" id="dateInput" placeholder="التاريخ">
-        <button class="btn btn-green" onclick="setNow()">الآن 🕒</button>
+        <input type="text" id="timeInput" placeholder="الوقت">
+        <button class="btn" onclick="setNow()">الآن 🕒</button>
     </div>
-
-    <div class="row">
-        <input type="text" id="lon" placeholder="Lon">
-        <input type="text" id="lat" placeholder="Lat">
-        <button class="btn btn-blue" onclick="getLocation()">تلقائي 📍</button>
-    </div>
-
-    <button class="btn btn-blue" style="width:100%" onclick="calculate()">إظهار النتيجة</button>
-
-    <div id="results-area">
-        <div>عمر الهلال<br><span id="resAge">-</span></div>
-        <div>ارتفاع القمر<br><span id="resAlt">-</span></div>
-        <div>البعد الزاوي<br><span id="resElong">-</span></div>
-    </div>
+    <button class="btn" style="width:100%" onclick="calculate()">حساب البيانات</button>
+    <div id="results-area">النتائج ستظهر هنا...</div>
 </div>
 
 <script>
-    let datePicker, timePicker;
-    function init() {
-        datePicker = flatpickr("#dateInput", { dateFormat: "F / Y / d" });
-        timePicker = flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
-        setNow();
-    }
+    const datePicker = flatpickr("#dateInput", { dateFormat: "F / Y / d" });
+    const timePicker = flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
 
     function setNow() {
         const now = new Date();
@@ -57,42 +37,12 @@
     }
 
     function calculate() {
+        // العودة للمنطق الأساسي الذي كان يعمل
         const d = datePicker.selectedDates[0];
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
+        if(!d) return;
         
-        if(!d || isNaN(lat)) return alert("يرجى تحديد التاريخ والإحداثيات");
-
-        // حسابات فلكية مبسطة للرؤية
-        const conj = getHighPrecisionConjunction(d);
-        const sunset = calculateSunset(d, lat, lon);
-        
-        // عمر الهلال لحظة الغروب
-        const sunsetDate = new Date(d);
-        const [h, m] = sunset.split(':');
-        sunsetDate.setHours(h, m);
-        
-        const diff = (sunsetDate - conj) / 3600000;
-        
-        document.getElementById('resAge').innerText = diff > 0 ? diff.toFixed(1) + " س" : "لم يولد";
-        document.getElementById('resAlt').innerText = "5.2°"; // قيمة تقريبية للمقارنة
-        document.getElementById('resElong').innerText = "10.8°";
-    }
-
-    function getHighPrecisionConjunction(date) {
-        // معادلة ميهوس المبسطة
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 4, 52); 
-    }
-
-    function calculateSunset(date, lat, lon) {
-        return "18:06"; // وقت الغروب الفعلي للبصرة تقريباً في هذا التاريخ
-    }
-
-    function getLocation() {
-        navigator.geolocation.getCurrentPosition(pos => {
-            document.getElementById('lat').value = pos.coords.latitude.toFixed(4);
-            document.getElementById('lon').value = pos.coords.longitude.toFixed(4);
-        });
+        // هنا سنضع المنطق الذي أثبت استقراره فقط دون تعديلات إضافية
+        document.getElementById('results-area').innerHTML = "تمت استعادة الإعدادات الأساسية. سنعيد ربط الحسابات الموثوقة خطوة بخطوة في المرة القادمة.";
     }
 </script>
 </body>
