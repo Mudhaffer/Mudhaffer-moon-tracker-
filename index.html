@@ -10,7 +10,6 @@
         .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
         h2 { text-align: center; color: #f1f5f9; margin-top: 0; }
         
-        /* توزيع جديد ومنظم للسطر الأول */
         .header-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         
@@ -27,7 +26,7 @@
     <h2>🌙 بيانات رؤية الهلال</h2>
     
     <div class="header-row">
-        <input type="text" id="dateOnly" placeholder="التاريخ (DD/MM/YYYY)">
+        <input type="text" id="dateOnly" placeholder="التاريخ">
         <input type="text" id="timeOnly" placeholder="الوقت">
         <button class="btn-now" onclick="setNow()">الآن 🕒</button>
     </div>
@@ -49,9 +48,16 @@
 </div>
 
 <script>
-    // تهيئة التاريخ والوقت بشكل منفصل لاحترافية القراءة
+    // تهيئة التاريخ فقط
     flatpickr("#dateOnly", { dateFormat: "d / F / Y" });
-    flatpickr("#timeOnly", { enableTime: true, noCalendar: true, dateFormat: "H:i" });
+    
+    // تهيئة الوقت فقط
+    flatpickr("#timeOnly", { 
+        enableTime: true, 
+        noCalendar: true, 
+        dateFormat: "H:i",
+        time_24hr: true 
+    });
 
     function setNow() {
         const now = new Date();
@@ -60,7 +66,7 @@
     }
 
     function calculate() {
-        document.getElementById('results').innerHTML = "جاري الحساب الفلكي الدقيق...";
+        document.getElementById('results').innerHTML = "جاري الحساب الفلكي...";
     }
 </script>
 </body>
