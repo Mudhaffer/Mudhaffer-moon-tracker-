@@ -2,101 +2,67 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>حساب بيانات الهلال الاحترافي</title>
+    <title>تطبيق رؤية الهلال الاحترافي</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 20px; padding: 25px; width: 100%; max-width: 480px; border: 1px solid #38bdf8; }
-        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-geo { background: #2ecc71; margin-bottom: 15px; }
-        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; margin-top: 5px; box-sizing: border-box; }
-        #resultDisplay { margin-top: 20px; padding: 15px; background: #0f172a; border: 1px solid #334155; border-radius: 10px; line-height: 1.8; }
+        select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; margin-top: 5px; box-sizing: border-box; }
+        .btn { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🌙 حساب بيانات الهلال</h2>
+    <h2>🌙 مراكز محافظات العراق</h2>
     
-    <label>التاريخ والوقت:</label>
-    <input type="datetime-local" id="observationTime">
+    <label>اختر المحافظة:</label>
+    <select id="citySelect" onchange="updateCoords()">
+        <option value="">-- اختر المحافظة --</option>
+    </select>
     
-    <button class="btn btn-geo" onclick="getUserLocation()">📍 تحديد موقعي تلقائياً</button>
-    
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
         <input type="number" id="lat" placeholder="خط العرض" step="any">
         <input type="number" id="lon" placeholder="خط الطول" step="any">
     </div>
-    
+
     <button class="btn" onclick="calculate()">عرض النتائج</button>
-    <div id="resultDisplay">النتائج ستظهر هنا...</div>
+    <div id="resultDisplay" style="margin-top: 20px;"></div>
 </div>
 
 <script>
-    // تعيين الوقت الحالي عند تحميل الصفحة
-    window.onload = function() {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('observationTime').value = now.toISOString().slice(0, 16);
-    };
+    const iraqCities = [
+        { name: "البصرة", lat: 30.5081, lon: 47.7835 }, { name: "بغداد", lat: 33.3152, lon: 44.3661 },
+        { name: "الموصل", lat: 36.3400, lon: 43.1300 }, { name: "أربيل", lat: 36.1911, lon: 44.0092 },
+        { name: "السليمانية", lat: 35.5558, lon: 45.4350 }, { name: "كركوك", lat: 35.4681, lon: 44.3922 },
+        { name: "النجف", lat: 32.0292, lon: 44.3222 }, { name: "كربلاء", lat: 32.6164, lon: 44.0246 },
+        { name: "الحلة", lat: 32.4828, lon: 44.4336 }, { name: "الديوانية", lat: 31.9833, lon: 44.9167 },
+        { name: "العمارة", lat: 31.8419, lon: 47.1472 }, { name: "الناصرية", lat: 31.0593, lon: 46.2519 },
+        { name: "الكوت", lat: 32.5033, lon: 45.8239 }, { name: "بعقوبة", lat: 33.7539, lon: 44.6469 },
+        { name: "الرمادي", lat: 33.4245, lon: 43.2842 }, { name: "السماوة", lat: 31.3267, lon: 45.2933 },
+        { name: "دهوك", lat: 36.8667, lon: 42.9833 }, { name: "تكريت", lat: 34.6075, lon: 43.6817 }
+    ];
 
-    function getUserLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    document.getElementById('lat').value = pos.coords.latitude.toFixed(6);
-                    document.getElementById('lon').value = pos.coords.longitude.toFixed(6);
-                },
-                (err) => { alert("تعذر الحصول على الموقع، يرجى إدخاله يدوياً."); }
-            );
-        } else {
-            alert("متصفحك لا يدعم تحديد الموقع.");
+    // تعبئة القائمة عند تحميل الصفحة
+    const select = document.getElementById('citySelect');
+    iraqCities.forEach(city => {
+        let opt = document.createElement('option');
+        opt.value = JSON.stringify({lat: city.lat, lon: city.lon});
+        opt.innerHTML = city.name;
+        select.appendChild(opt);
+    });
+
+    function updateCoords() {
+        const val = JSON.parse(select.value);
+        if(val) {
+            document.getElementById('lat').value = val.lat;
+            document.getElementById('lon').value = val.lon;
         }
     }
 
-    function toDMS(val) {
-        const d = Math.floor(Math.abs(val));
-        const m = Math.floor((Math.abs(val) - d) * 60);
-        const s = Math.floor(((Math.abs(val) - d) * 60 - m) * 60);
-        return `${d}° ${m}' ${s}"`;
-    }
-
     function calculate() {
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-        const obsDate = new Date(document.getElementById('observationTime').value);
-
-        if (isNaN(lat) || isNaN(lon)) { alert("يرجى إدخال الموقع أو تحديده!"); return; }
-
-        // تنسيق التاريخ العربي
-        const dateStr = new Intl.DateTimeFormat('ar-SA', { 
-            day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' 
-        }).format(obsDate);
-
-        // حسابات فلكية
-        const moonPos = SunCalc.getMoonPosition(obsDate, lat, lon);
-        const sunPos = SunCalc.getPosition(obsDate, lat, lon);
-        
-        // حساب عمر الهلال
-        const ageInDays = SunCalc.getMoonIllumination(obsDate).phase * 29.53;
-        const totalSeconds = Math.floor(ageInDays * 24 * 3600);
-        const d = Math.floor(totalSeconds / 86400);
-        const h = Math.floor((totalSeconds % 86400) / 3600);
-        const m = Math.floor((totalSeconds % 3600) / 60);
-        const s = totalSeconds % 60;
-
-        const altDeg = moonPos.altitude * (180 / Math.PI);
-        const elongation = Math.acos(Math.sin(moonPos.altitude) * Math.sin(sunPos.altitude) + 
-                           Math.cos(moonPos.altitude) * Math.cos(sunPos.altitude) * Math.cos(moonPos.azimuth - sunPos.azimuth)) * (180 / Math.PI);
-
-        document.getElementById('resultDisplay').innerHTML = `
-            <p><strong>التاريخ:</strong> ${dateStr}</p>
-            <p><strong>الموقع:</strong> ${toDMS(lat)}، ${toDMS(lon)}</p>
-            <hr>
-            <p>ارتفاع القمر: ${altDeg.toFixed(2)}°</p>
-            <p>الاستطالة: ${elongation.toFixed(2)}°</p>
-            <p>عمر الهلال: ${d} يوم، ${h} ساعة، ${m} دقيقة، ${s} ثانية</p>
-        `;
+        // هنا سنضيف لاحقاً المحرك الفلكي الخاص بالاقتران والغروب
+        alert("تم اختيار الموقع بنجاح! جاهزون للمرحلة القادمة: حساب الاقتران والغروب.");
     }
 </script>
 </body>
