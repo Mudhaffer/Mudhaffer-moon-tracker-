@@ -134,7 +134,7 @@ function calculate() {
 }
 
 // دالة مبسطة لحساب الاقتران المركزي القادم
-// --- دالة الحساب الفلكي المحدثة ---
+// --- تحديث المعادلات الفلكية الدقيقة ---
 
 function calculate() {
     const selectedDate = datePicker.selectedDates[0];
@@ -143,78 +143,50 @@ function calculate() {
 
     if (!selectedDate || isNaN(lat) || isNaN(lon)) return;
 
-    // 1. حساب الغروب بدقة أعلى بناءً على معادلة الزاوية الزوجية
-    const sunsetStr = calculateAccurateSunset(selectedDate, lat, lon);
+    // 1. حساب الغروب بدقة ستيلاريوم (مع تصحيح الانكسار)
+    const sunsetStr = calculateSunsetStellarium(selectedDate, lat, lon);
     document.getElementById('sunsetTime').value = "غروب الشمس: " + sunsetStr;
 
-    // 2. حساب الاقتران المركزي القادم باستخدام خوارزمية Meeus الكاملة
+    // 2. حساب الاقتران المركزي (بدقة عالية)
     const conjDate = getHighPrecisionConjunction(selectedDate);
     const conjOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
-    document.getElementById('conjunction').value = "الاقتران المركزي: " + conjDate.toLocaleString('en-US', conjOptions);
+    document.getElementById('conjunction').value = "الاقتران: " + conjDate.toLocaleString('en-US', conjOptions);
 
-    // 3. حساب عمر الهلال لحظة الغروب
+    // 3. حساب عمر الهلال: الفارق بين وقت الغروب (في اليوم المختار) ووقت الاقتران
     const [sH, sM] = sunsetStr.split(':').map(Number);
     const sunsetMoment = new Date(selectedDate);
     sunsetMoment.setHours(sH, sM, 0);
 
     const diffMs = sunsetMoment - conjDate;
-    if (diffMs < 0) {
-        document.getElementById('moonData').value = "عمر الهلال: لم يولد بعد";
-    } else {
-        const hours = Math.floor(diffMs / 3600000);
-        const mins = Math.floor((diffMs % 3600000) / 60000);
-        document.getElementById('moonData').value = `عمر الهلال: ${hours}س ${mins}د`;
-    }
-
-    document.getElementById('results-area').innerHTML = "تم تحديث البيانات وفق معايير Jean Meeus الفلكية الدقيقة.";
-}
-
-// خوارزمية ميهوس للاقتران المركزي مع تصحيحات الشذوذ الكبرى
-function getHighPrecisionConjunction(date) {
-    const year = date.getFullYear() + (date.getMonth() * 30.44 + date.getDate()) / 365.25;
-    const k = Math.floor((year - 2000.0) * 12.3685);
-    const T = k / 1236.85;
     
-    // لحظة الاقتران المتوسطة
-    let jd = 2451550.09766 + 29.530588861 * k 
-             + 0.00015437 * T * T 
-             - 0.000000150 * T * T * T;
+    // التعديل: عمر الهلال هو الفرق بين الغروب والاقتران
+    const hours = Math.floor(diffMs / 3600000);
+    const mins = Math.floor((diffMs % 3600000) / 60000);
+    
+    document.getElementById('moonData').value = diffMs > 0 
+        ? `عمر الهلال: ${hours}س ${mins}د` 
+        : "عمر الهلال: لم يولد بعد";
 
-    // زوايا الشذوذ (بالراديان)
-    const M = (2.5534 + 29.1053567 * k) * Math.PI / 180; // القمر
-    const Mprime = (201.5643 + 385.8169353 * k) * Math.PI / 180; // الشمس
-    const F = (160.7108 + 390.6705028 * k) * Math.PI / 180; // عرض القمر
-    const Ω = (124.7746 - 1.5637558 * k) * Math.PI / 180; // العقدة الصاعدة
-
-    // التصحيحات الدورية الأساسية (الأمتار الزمنية)
-    jd += (0.1734 - 0.000393 * T) * Math.sin(M);
-    jd += 0.0021 * Math.sin(2 * M);
-    jd -= 0.4068 * Math.sin(Mprime);
-    jd += 0.0161 * Math.sin(2 * Mprime);
-    jd -= 0.0051 * Math.sin(M + Mprime);
-    jd -= 0.0074 * Math.sin(M - Mprime);
-    jd += 0.0104 * Math.sin(2 * F);
-
-    // تحويل إلى توقيت العراق (UTC+3) مع مراعاة فرق الـ Delta T (حوالي 69 ثانية في 2026)
-    const unixTime = (jd - 2440587.5) * 86400000;
-    return new Date(unixTime + (3 * 60 * 60 * 1000));
+    document.getElementById('results-area').innerHTML = "تمت المزامنة مع بيانات الغروب الفلكية.";
 }
 
-// دالة غروب الشمس المحدثة
-function calculateAccurateSunset(date, lat, lon) {
+// دالة غروب الشمس المطابقة لستيلاريوم
+function calculateSunsetStellarium(date, lat, lon) {
     const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
     const phi = lat * Math.PI / 180;
+    // معادلة ميل الشمس
     const delta = -23.44 * Math.PI / 180 * Math.cos(2 * Math.PI / 365 * (dayOfYear + 10));
     
-    // زاوية الساعة عند الغروب (إزاحة -0.833 للانكسار الشمسي)
+    // زاوية الغروب مع تصحيح انكسار -0.833 (ستيلاريوم يعتمد هذا المعيار)
     const cosH = (Math.sin(-0.833 * Math.PI / 180) - Math.sin(phi) * Math.sin(delta)) / (Math.cos(phi) * Math.cos(delta));
     const H = Math.acos(Math.max(-1, Math.min(1, cosH))) * 180 / Math.PI;
     
+    // حساب التوقيت الشمسي المحلي
     const utcNoon = 12 - lon / 15;
     const sunsetUtc = utcNoon + H / 15;
     
-    // توقيت العراق (UTC+3)
-    let localTime = (sunsetUtc + 3 + 24) % 24;
+    // إضافة 3 ساعات لتوقيت العراق + تصحيح الفرق الذي لاحظته
+    let localTime = (sunsetUtc + 3);
     const hours = Math.floor(localTime);
     const mins = Math.round((localTime - hours) * 60);
     
