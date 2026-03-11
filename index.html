@@ -8,7 +8,6 @@
         .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
         h2 { text-align: center; color: #f1f5f9; margin-top: 0; }
         
-        /* تنسيق الخانات لتكون متناسقة وصغيرة كما طلبت */
         .header-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
         .input-group { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
         .result-group { display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 5px; margin-bottom: 15px; }
@@ -17,7 +16,8 @@
         .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-now { background: #22c55e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; }
         
-        #results { border: 1px solid #334155; padding: 15px; border-radius: 5px; min-height: 80px; text-align: center; color: #94a3b8; }
+        /* أيقونة تقويم بسيطة ومدمجة */
+        .cal-icon { font-size: 1.2em; cursor: pointer; color: #38bdf8; }
     </style>
 </head>
 <body>
@@ -46,7 +46,9 @@
         <input type="text" id="conjunction" placeholder="موعد الاقتران" disabled>
     </div>
 
-    <div id="results">النتائج ستظهر هنا عند الضغط على إظهار النتيجة...</div>
+    <div id="results" style="border: 1px solid #334155; padding: 15px; border-radius: 5px; text-align: center; color: #94a3b8;">
+        النتائج ستظهر هنا عند الضغط على إظهار النتيجة...
+    </div>
 </div>
 
 <script>
@@ -55,7 +57,7 @@
         document.getElementById('day').value = now.getDate();
         document.getElementById('month').value = now.toLocaleString('en-US', { month: 'long' });
         document.getElementById('year').value = now.getFullYear();
-        document.getElementById('time').value = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('time').value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
     }
 </script>
 </body>
