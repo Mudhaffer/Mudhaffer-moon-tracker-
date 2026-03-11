@@ -5,52 +5,43 @@
     <title>بيانات رؤية الهلال</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
-        body { background: #f8fafc; color: #1e293b; font-family: sans-serif; padding: 20px; }
-        .app-container { border: 3px solid #1e40af; border-radius: 20px; padding: 25px; max-width: 500px; margin: auto; background: white; }
-        h2 { text-align: center; color: #1e40af; }
-        .row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .field { flex: 1; }
-        input, select { width: 100%; padding: 10px; border: 2px solid #1e40af; border-radius: 8px; }
-        .btn-main { background: #dc2626; color: white; padding: 15px; width: 100%; border: none; border-radius: 8px; font-weight: bold; }
-        .result-panel { border: 2px solid #065f46; border-radius: 10px; padding: 15px; margin-top: 20px; }
-        .status-ok { color: green; }
-        .status-bad { color: red; }
+        /* الألوان والهيكل كما في الصورة الأصلية */
+        body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
+        .card { background: #1e293b; border-radius: 15px; padding: 20px; width: 100%; max-width: 500px; border: 1px solid #38bdf8; }
+        h2 { text-align: center; color: #f1f5f9; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; margin-bottom: 15px; box-sizing: border-box; }
+        .btn-loc { background: #2ecc71; color: #0f172a; border: none; padding: 12px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
+        .btn-calc { background: #38bdf8; color: #0f172a; border: none; padding: 15px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
+        #results { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 5px; min-height: 100px; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="card">
     <h2>🌙 بيانات رؤية الهلال</h2>
     
     <label>التاريخ والوقت:</label>
     <input type="datetime-local" id="dateInput">
-
-    <div class="row">
-        <div class="field">
-            <label>المحافظة:</label>
-            <select id="citySelect"><option>البصرة</option></select>
-        </div>
-        <div class="field">
-            <label>موعد الاقتران القادم:</label>
-            <input type="text" id="conjunction" disabled>
-        </div>
+    
+    <button class="btn-loc" onclick="alert('تحديد الموقع')">موقعي 📍</button>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <input type="text" id="lon" placeholder="خط الطول">
+        <input type="text" id="lat" placeholder="خط العرض">
     </div>
 
-    <div class="row">
-        <div class="field"><label>Lat:</label><input type="text" id="lat"></div>
-        <div class="field"><label>Lon:</label><input type="text" id="lon"></div>
+    <button class="btn-calc" onclick="calculate()">عرض النتائج</button>
+
+    <div id="results">
+        النتائج ستظهر هنا مع المقارنة اللونية...
     </div>
-
-    <button class="btn-main" onclick="calculate()">إظهار النتيجة</button>
-
-    <div id="results" class="result-panel">
-        </div>
 </div>
 
 <script>
     function calculate() {
-        // سيتم دمج منطق الحساب الفلكي هنا
-        document.getElementById('results').innerHTML = "النتائج ستظهر هنا مع المقارنة اللونية...";
+        // سيتم إضافة المنطق الفلكي هنا
+        document.getElementById('results').innerHTML = "جاري الحساب...";
     }
 </script>
 </body>
