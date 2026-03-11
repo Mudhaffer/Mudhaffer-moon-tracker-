@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -8,79 +7,106 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
-        h2 { text-align: center; color: #f1f5f9; margin-top: 0; }
+        .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 650px; border: 2px solid #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+        h2 { text-align: center; color: #f1f5f9; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
         
-        .row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .input-group { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        /* تنسيق الأسطر والخانات */
+        .row { display: grid; grid-template-columns: 1fr 1fr 0.8fr; gap: 10px; margin-bottom: 15px; }
+        .input-group { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .result-group { display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 10px; margin-bottom: 15px; }
         
-        input, select { padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; }
-        .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-now { background: #22c55e; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
-     
-        // هنا الاضافة
-     #dateInput {
-    /* وضع أيقونة تقويم بلون أزرق سماوي متناسق مع تصميمك */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://w3.org' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: left 10px center; /* وضعها جهة اليسار لأن الكتابة تبدأ من اليمين */
-    background-size: 20px;
-    padding-left: 35px; /* مسافة لكي لا يغطي النص الأيقونة */
-}
+        input, select { padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; font-size: 14px; width: 100%; box-sizing: border-box; }
+        
+        /* تخصيص أيقونة التقويم يدوياً */
+        input::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(5) hue-rotate(175deg); cursor: pointer; }
 
+        .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-action:hover { background: #7dd3fc; }
         
+        .btn-now { background: #22c55e; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-now:hover { background: #16a34a; }
         
-        // الى هنا 
+        #results { border: 1px solid #334155; padding: 20px; border-radius: 5px; min-height: 50px; text-align: center; color: #94a3b8; background: #111827; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🌙 بيانات رؤية الهلال</h2>
+    <h2><span>🌙</span> بيانات رؤية الهلال</h2>
     
     <div class="row">
-        <input type="text" id="dateInput" placeholder="التاريخ (DD/Month/YYYY)">
+        <input type="text" id="dateInput" placeholder="التاريخ (DD / Month / YYYY)">
         <input type="text" id="timeInput" placeholder="الوقت (24h)">
         <button class="btn-now" onclick="setNow()">الآن 🕒</button>
     </div>
 
     <div class="input-group">
+        <input type="text" id="lon" placeholder="خط الطول (Lon)">
+        <input type="text" id="lat" placeholder="خط العرض (Lat)">
+        <select id="citySelect" onchange="updateCoords()">
+            <option value="">اختر مدينة...</option>
+            <option value="basra">البصرة</option>
+            <option value="baghdad">بغداد</option>
+            <option value="najaf">النجف</option>
+        </select>
         <button class="btn-action" onclick="getLocation()">تلقائي 📍</button>
-        <select id="citySelect"><option>البصرة</option></select>
-        <input type="text" id="lat" placeholder="Lat">
-        <input type="text" id="lon" placeholder="Lon">
     </div>
 
-    <div class="input-group">
+    <div class="result-group">
         <button class="btn-action" onclick="calculate()">إظهار النتيجة</button>
         <input type="text" id="moonData" placeholder="بيانات الهلال" disabled>
         <input type="text" id="conjunction" placeholder="موعد الاقتران" disabled>
     </div>
 
-    <div id="results" style="border: 1px solid #334155; padding: 15px; border-radius: 5px; text-align: center; color: #94a3b8;">
-        النتائج ستظهر هنا عند الضغط على إظهار النتيجة...
-    </div>
+    <div id="results">النتائج ستظهر هنا عند الضغط على إظهار النتيجة...</div>
 </div>
 
 <script>
-   // 1. احفظ النسخ في متغيرات عند التحميل
-const datePicker = flatpickr("#dateInput", { dateFormat: "d / F / Y" });
-const timePicker = flatpickr("#timeInput", { 
-    enableTime: true, 
-    noCalendar: true, 
-    dateFormat: "H:i", 
-    time_24hr: true 
-});
+    // 1. تهيئة النسخ (الـ Pickers) عند التحميل
+    const datePicker = flatpickr("#dateInput", { 
+        dateFormat: "F / Y / d", // كما استقر في صورتك الأخيرة
+    });
 
-function setNow() {
-    const now = new Date();
-    // 2. استخدم المتغيرات لتحديث القيمة مباشرة
-    datePicker.setDate(now);
-    timePicker.setDate(now);
-}
-       
+    const timePicker = flatpickr("#timeInput", { 
+        enableTime: true, 
+        noCalendar: true, 
+        dateFormat: "H:i", 
+        time_24hr: true 
+    });
+
+    // 2. دالة "الآن" المصححة والمثبتة
+    function setNow() {
+        const now = new Date();
+        // تحديث كائنات flatpickr مباشرة لضمان ظهور البيانات في مكانها
+        datePicker.setDate(now); 
+        timePicker.setDate(now);
+    }
+
+    // 3. تحديث الإحداثيات يدوياً عند اختيار المدينة
+    function updateCoords() {
+        const city = document.getElementById('citySelect').value;
+        const coords = {
+            "basra": { lat: "30.5081", lon: "47.7835" },
+            "baghdad": { lat: "33.3152", lon: "44.3661" },
+            "najaf": { lat: "32.0259", lon: "44.3463" }
+        };
+        if(coords[city]) {
+            document.getElementById('lat').value = coords[city].lat;
+            document.getElementById('lon').value = coords[city].lon;
+        }
+    }
+
     function calculate() {
-        document.getElementById('results').innerHTML = "جاري معالجة البيانات الفلكية...";
+        document.getElementById('results').innerHTML = "جاري حساب بيانات الهلال الفلكية لهذه الإحداثيات...";
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                document.getElementById('lat').value = position.coords.latitude.toFixed(4);
+                document.getElementById('lon').value = position.coords.longitude.toFixed(4);
+            });
+        }
     }
 </script>
 </body>
