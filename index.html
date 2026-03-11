@@ -8,14 +8,16 @@
         .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
         h2 { text-align: center; color: #f1f5f9; margin-top: 0; }
         
+        /* تنسيق الخانات لتكون متناسقة وصغيرة كما طلبت */
         .header-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
+        .result-group { display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 5px; margin-bottom: 15px; }
         
-        input, select { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; }
-        .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-now { background: #22c55e; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
+        input, select { padding: 8px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; width: 100%; box-sizing: border-box; }
+        .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-now { background: #22c55e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; }
         
-        #results { border: 1px solid #334155; padding: 20px; border-radius: 5px; min-height: 80px; text-align: center; color: #94a3b8; }
+        #results { border: 1px solid #334155; padding: 15px; border-radius: 5px; min-height: 80px; text-align: center; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -38,10 +40,10 @@
         <input type="text" id="lon" placeholder="Lon">
     </div>
 
-    <div class="input-group">
-        <input type="text" id="conjunction" placeholder="موعد الاقتران" disabled>
-        <input type="text" id="moonData" placeholder="بيانات الهلال" disabled>
+    <div class="result-group">
         <button class="btn-action" onclick="calculate()">إظهار النتيجة</button>
+        <input type="text" id="moonData" placeholder="بيانات الهلال" disabled>
+        <input type="text" id="conjunction" placeholder="موعد الاقتران" disabled>
     </div>
 
     <div id="results">النتائج ستظهر هنا عند الضغط على إظهار النتيجة...</div>
@@ -54,10 +56,6 @@
         document.getElementById('month').value = now.toLocaleString('en-US', { month: 'long' });
         document.getElementById('year').value = now.getFullYear();
         document.getElementById('time').value = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
-    }
-
-    function calculate() {
-        document.getElementById('results').innerHTML = "جاري الحساب الفلكي...";
     }
 </script>
 </body>
