@@ -10,11 +10,12 @@
         .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
         h2 { text-align: center; color: #f1f5f9; margin-top: 0; }
         
-        /* ضبط الخانات لتكون متناغمة */
-        .input-group { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
-        input, select { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; }
+        /* توزيع جديد ومنظم للسطر الأول */
+        .header-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         
-        .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        input, select { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; }
+        .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-now { background: #22c55e; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
         
         #results { border: 1px solid #334155; padding: 20px; border-radius: 5px; min-height: 80px; text-align: center; color: #94a3b8; }
@@ -25,16 +26,17 @@
 <div class="card">
     <h2>🌙 بيانات رؤية الهلال</h2>
     
-    <div class="input-group">
-        <input type="text" id="dateInput" placeholder="اختر التاريخ والوقت" style="flex: 3;">
+    <div class="header-row">
+        <input type="text" id="dateOnly" placeholder="التاريخ (DD/MM/YYYY)">
+        <input type="text" id="timeOnly" placeholder="الوقت">
         <button class="btn-now" onclick="setNow()">الآن 🕒</button>
     </div>
 
     <div class="input-group">
         <button class="btn-action" onclick="getLocation()">تلقائي 📍</button>
         <select id="citySelect"><option>البصرة</option></select>
-        <input type="text" id="lat" placeholder="خط العرض">
-        <input type="text" id="lon" placeholder="خط الطول">
+        <input type="text" id="lat" placeholder="Lat">
+        <input type="text" id="lon" placeholder="Lon">
     </div>
 
     <div class="input-group">
@@ -47,19 +49,18 @@
 </div>
 
 <script>
-    // تهيئة التاريخ بالتنسيق الاحترافي
-    const fp = flatpickr("#dateInput", {
-        dateFormat: "d F Y - H:i",
-        enableTime: true,
-        locale: "ar"
-    });
+    // تهيئة التاريخ والوقت بشكل منفصل لاحترافية القراءة
+    flatpickr("#dateOnly", { dateFormat: "d / F / Y" });
+    flatpickr("#timeOnly", { enableTime: true, noCalendar: true, dateFormat: "H:i" });
 
     function setNow() {
-        fp.setDate(new Date());
+        const now = new Date();
+        flatpickr("#dateOnly").setDate(now);
+        flatpickr("#timeOnly").setDate(now);
     }
 
     function calculate() {
-        document.getElementById('results').innerHTML = "جاري معالجة البيانات الفلكية...";
+        document.getElementById('results').innerHTML = "جاري الحساب الفلكي الدقيق...";
     }
 </script>
 </body>
