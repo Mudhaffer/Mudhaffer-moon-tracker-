@@ -48,16 +48,20 @@
 </div>
 
 <script>
-    // تهيئة التاريخ: يظهر اسم الشهر
-    flatpickr("#dateInput", { dateFormat: "d / F / Y" });
-    
-    // تهيئة الوقت: نظام 24 ساعة
-    flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+   // 1. احفظ النسخ في متغيرات عند التحميل
+const datePicker = flatpickr("#dateInput", { dateFormat: "d / F / Y" });
+const timePicker = flatpickr("#timeInput", { 
+    enableTime: true, 
+    noCalendar: true, 
+    dateFormat: "H:i", 
+    time_24hr: true 
+});
 
-    function setNow() {
-        const now = new Date();
-        flatpickr("#dateInput").setDate(now);
-        flatpickr("#timeInput").setDate(now);
+function setNow() {
+    const now = new Date();
+    // 2. استخدم المتغيرات لتحديث القيمة مباشرة
+    datePicker.setDate(now);
+    timePicker.setDate(now);
 }
        
     function calculate() {
