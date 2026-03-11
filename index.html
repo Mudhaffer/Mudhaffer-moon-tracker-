@@ -2,87 +2,85 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>بيانات رؤية الهلال</title>
+    <title>بيانات رؤية الهلال الاحترافية</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 10px; padding: 20px; width: 100%; max-width: 650px; border: 2px solid #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
-        h2 { text-align: center; color: #f1f5f9; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 700px; border: 2px solid #38bdf8; }
+        h2 { text-align: center; margin-bottom: 25px; font-size: 1.5em; }
         
-        /* تنسيق الأسطر والخانات */
-        .row { display: grid; grid-template-columns: 1fr 1fr 0.8fr; gap: 10px; margin-bottom: 15px; }
-        .input-group { display: grid; grid-template-columns: 1fr 1fr 1.5fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .result-group { display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 10px; margin-bottom: 15px; }
+        /* تنسيق الشبكة لترتيب العناصر */
+        .grid-row { display: grid; grid-template-columns: 1fr 1fr 120px; gap: 12px; margin-bottom: 15px; align-items: center; }
+        .location-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 120px; gap: 12px; margin-bottom: 15px; }
+        .result-row { display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 120px; gap: 12px; margin-bottom: 15px; }
+
+        input, select { padding: 12px; border-radius: 6px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; width: 100%; box-sizing: border-box; }
         
-        input, select { padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; font-size: 14px; width: 100%; box-sizing: border-box; }
-        
-        /* تخصيص أيقونة التقويم يدوياً */
+        /* تلوين أيقونة التقويم */
         input::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(5) hue-rotate(175deg); cursor: pointer; }
 
-        .btn-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-action:hover { background: #7dd3fc; }
-        
-        .btn-now { background: #22c55e; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-now:hover { background: #16a34a; }
-        
-        #results { border: 1px solid #334155; padding: 20px; border-radius: 5px; min-height: 50px; text-align: center; color: #94a3b8; background: #111827; }
+        /* توحيد أزرار التحكم على جهة اليسار */
+        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-blue { background: #38bdf8; color: #0f172a; }
+        .btn-green { background: #22c55e; color: white; }
+        .btn-blue:hover { background: #7dd3fc; }
+
+        #results-area { border: 1px solid #334155; padding: 15px; border-radius: 6px; background: #111827; min-height: 60px; text-align: center; color: #94a3b8; }
     </style>
 </head>
-<body>
+<body onload="initialize()">
 
 <div class="card">
-    <h2><span>🌙</span> بيانات رؤية الهلال</h2>
+    <h2>🌙 نظام حساب رؤية الهلال</h2>
     
-    <div class="row">
-        <input type="text" id="dateInput" placeholder="التاريخ (DD / Month / YYYY)">
-        <input type="text" id="timeInput" placeholder="الوقت (24h)">
-        <button class="btn-now" onclick="setNow()">الآن 🕒</button>
+    <div class="grid-row">
+        <input type="text" id="dateInput" placeholder="التاريخ">
+        <input type="text" id="timeInput" placeholder="الوقت">
+        <button class="btn btn-green" onclick="setNow()">الآن 🕒</button>
     </div>
 
-    <div class="input-group">
-        <input type="text" id="lon" placeholder="خط الطول (Lon)">
-        <input type="text" id="lat" placeholder="خط العرض (Lat)">
+    <div class="location-row">
+        <input type="text" id="lon" placeholder="خط الطول">
+        <input type="text" id="lat" placeholder="خط العرض">
         <select id="citySelect" onchange="updateCoords()">
             <option value="">اختر مدينة...</option>
             <option value="basra">البصرة</option>
             <option value="baghdad">بغداد</option>
             <option value="najaf">النجف</option>
+            <option value="current" id="currentOption" style="display:none;">موقعي الحالي 📍</option>
         </select>
-        <button class="btn-action" onclick="getLocation()">تلقائي 📍</button>
+        <button class="btn btn-blue" onclick="getLocation()">تلقائي 📍</button>
     </div>
 
-    <div class="result-group">
-        <button class="btn-action" onclick="calculate()">إظهار النتيجة</button>
-        <input type="text" id="moonData" placeholder="بيانات الهلال" disabled>
-        <input type="text" id="conjunction" placeholder="موعد الاقتران" disabled>
+    <div class="result-row">
+        <input type="text" id="sunsetTime" placeholder="وقت الغروب" readonly>
+        <input type="text" id="conjunction" placeholder="موعد الاقتران" readonly>
+        <input type="text" id="moonData" placeholder="بيانات الهلال" readonly>
+        <button class="btn btn-blue" onclick="calculate()">حساب 🧮</button>
     </div>
 
-    <div id="results">النتائج ستظهر هنا عند الضغط على إظهار النتيجة...</div>
+    <div id="results-area">النتائج ستظهر هنا بعد الحساب...</div>
 </div>
 
 <script>
-    // 1. تهيئة النسخ (الـ Pickers) عند التحميل
-    const datePicker = flatpickr("#dateInput", { 
-        dateFormat: "F / Y / d", // كما استقر في صورتك الأخيرة
-    });
+    let datePicker, timePicker;
 
-    const timePicker = flatpickr("#timeInput", { 
-        enableTime: true, 
-        noCalendar: true, 
-        dateFormat: "H:i", 
-        time_24hr: true 
-    });
+    function initialize() {
+        // تهيئة التقويم والوقت
+        datePicker = flatpickr("#dateInput", { dateFormat: "F / Y / d" });
+        timePicker = flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+        
+        // التشغيل التلقائي عند فتح الصفحة
+        setNow();
+    }
 
-    // 2. دالة "الآن" المصححة والمثبتة
     function setNow() {
         const now = new Date();
-        // تحديث كائنات flatpickr مباشرة لضمان ظهور البيانات في مكانها
-        datePicker.setDate(now); 
+        datePicker.setDate(now);
         timePicker.setDate(now);
     }
 
-    // 3. تحديث الإحداثيات يدوياً عند اختيار المدينة
     function updateCoords() {
         const city = document.getElementById('citySelect').value;
         const coords = {
@@ -96,17 +94,31 @@
         }
     }
 
-    function calculate() {
-        document.getElementById('results').innerHTML = "جاري حساب بيانات الهلال الفلكية لهذه الإحداثيات...";
-    }
-
     function getLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
                 document.getElementById('lat').value = position.coords.latitude.toFixed(4);
                 document.getElementById('lon').value = position.coords.longitude.toFixed(4);
+                
+                // تحديث اسم المحافظة ليكون احترافياً
+                const citySelect = document.getElementById('citySelect');
+                const currentOpt = document.getElementById('currentOption');
+                currentOpt.style.display = "block";
+                citySelect.value = "current";
             });
         }
+    }
+
+    function calculate() {
+        const selectedDate = datePicker.selectedDates[0];
+        if (!selectedDate) return;
+
+        // منطق بدائي تمهيداً للمعادلات الفلكية
+        document.getElementById('results-area').innerHTML = "بدء جلب إحداثيات الشمس والقمر ليوم " + selectedDate.getDate();
+        
+        // محاكاة النتائج (سيتم استبدالها بالمعادلات في الخطوة القادمة)
+        document.getElementById('sunsetTime').value = "18:05";
+        document.getElementById('conjunction').value = "Mar 13 - 10:15";
     }
 </script>
 </body>
