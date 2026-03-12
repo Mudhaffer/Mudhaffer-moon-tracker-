@@ -55,7 +55,7 @@
     // 1. التهيئة التلقائية عند التحميل
    window.onload = () => {
         flatpickr("#dateInput", { dateFormat: "d F Y" }); // تحديد تنسيق التاريخ
-        flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i k", time_24hr: false });
+        flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "h:i K", time_24hr: false });
         
         const now = new Date();
        // تنسيق التاريخ الافتراضي: 13 March 2026
