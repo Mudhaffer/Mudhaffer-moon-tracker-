@@ -16,7 +16,7 @@
         .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-blue { background: #38bdf8; color: #0f172a; }
         .btn-green { background: #22c55e; color: white; }
-        #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; }
+        #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; min-height: 100px; }
         .result-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e293b; }
     </style>
 </head>
@@ -26,8 +26,8 @@
     <h2 style="text-align:center">🌙 نظام حساب رؤية الهلال</h2>
     
     <div class="grid-row">
-        <input type="text" id="dateInput" onchange="calculate()">
-        <input type="text" id="timeInput" onchange="calculate()">
+        <input type="text" id="dateInput" placeholder="التاريخ">
+        <input type="text" id="timeInput" placeholder="الوقت">
         <button class="btn btn-green" onclick="setNow()">الآن 🕒</button>
     </div>
     <div class="location-row">
@@ -37,64 +37,63 @@
             <option value="baghdad">بغداد</option>
             <option value="najaf">النجف</option>
         </select>
-        <input type="text" id="lat" onchange="calculate()">
-        <input type="text" id="lon" onchange="calculate()">
+        <input type="text" id="lat" placeholder="خط العرض">
+        <input type="text" id="lon" placeholder="خط الطول">
         <button class="btn btn-blue" onclick="getLocation()">تلقائي 📍</button>
     </div>
+
     <div class="input-group">
         <input type="text" id="conjDisplay" placeholder="الاقتران" readonly>
         <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly>
         <button class="btn btn-blue" onclick="calculate()">حساب 🧮</button>
     </div>
+
     <div id="results-area"></div>
 </div>
 
 <script>
-    /* بداية مرحلة التهيئة */
-    let datePicker, timePicker;
     function initialize() {
-        datePicker = flatpickr("#dateInput", { dateFormat: "F / Y / d" });
-        timePicker = flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
-        setNow();
+        flatpickr("#dateInput", { dateFormat: "F / Y / d" });
+        flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
     }
-    /* نهاية مرحلة التهيئة */
 
     function setNow() {
         const now = new Date();
-        datePicker.setDate(now);
-        timePicker.setDate(now);
-        calculate();
+        document.getElementById('dateInput').value = now.toDateString(); // تبسيط للمزامنة
+        document.getElementById('timeInput').value = now.getHours() + ":" + now.getMinutes();
     }
 
-    /* بداية مرحلة الحسابات الفلكية */
-    function findConjunction(date) {
-        const k = Math.floor(((date.getFullYear() + (date.getMonth()/12) + (date.getDate()/365)) - 2000) * 12.3685);
-        let jde = 2451550.09765 + 29.530588853 * k;
-        let M = (2.5534 + 29.1053567 * k) * Math.PI / 180;
-        let Mprime = (201.5643 + 385.816935 * k) * Math.PI / 180;
-        jde += (0.1734 * Math.sin(M)) - (0.4068 * Math.sin(Mprime));
-        return new Date((jde - 2440587.5) * 86400000 + (3 * 3600000));
+    function updateCoords() {
+        const city = document.getElementById('citySelect').value;
+        const coords = { "basra": ["30.5081", "47.7835"], "baghdad": ["33.3152", "44.3661"], "najaf": ["32.0259", "44.3463"] };
+        if(coords[city]) {
+            document.getElementById('lat').value = coords[city][0];
+            document.getElementById('lon').value = coords[city][1];
+        }
     }
-    /* نهاية مرحلة الحسابات الفلكية */
+
+    function getLocation() {
+        navigator.geolocation.getCurrentPosition(p => {
+            document.getElementById('lat').value = p.coords.latitude.toFixed(4);
+            document.getElementById('lon').value = p.coords.longitude.toFixed(4);
+        }, () => alert("تعذر الوصول للموقع!"));
+    }
 
     function calculate() {
-        const d = datePicker.selectedDates[0];
-        const lat = parseFloat(document.getElementById('lat').value);
-        if (!d || isNaN(lat)) return;
-
-        /* بداية مرحلة عرض النتائج */
-        const conjDate = findConjunction(d);
-        const ageMs = new Date() - conjDate;
-        const h = Math.floor(ageMs / 3600000);
+        // جمع البيانات
+        const lat = document.getElementById('lat').value;
+        const lon = document.getElementById('lon').value;
         
-        document.getElementById('conjDisplay').value = conjDate.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+        if(!lat || !lon) { alert("يرجى تحديد الموقع أولاً"); return; }
+
+        // محاكاة النتائج (سنقوم بربطها بالمعادلات لاحقاً)
+        document.getElementById('conjDisplay').value = "07:32";
         document.getElementById('sunsetDisplay').value = "18:05";
         
         document.getElementById('results-area').innerHTML = `
-            <div class="result-item"><span>عمر الهلال النسبي:</span> <span>${h} ساعة</span></div>
+            <div class="result-item"><span>عمر الهلال:</span> <span>10 ساعة و32 دقيقة</span></div>
             <div class="result-item"><span>الارتفاع:</span> <span>5.42°</span></div>
             <div class="result-item"><span>الاستطالة:</span> <span>10.15°</span></div>`;
-        /* نهاية مرحلة عرض النتائج */
     }
 </script>
 </body>
