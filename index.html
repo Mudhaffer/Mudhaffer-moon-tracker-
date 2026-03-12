@@ -28,7 +28,7 @@
     <div class="grid-row">
         <input type="text" id="dateInput" onchange="calculate()">
         <input type="text" id="timeInput" onchange="calculate()">
-        <button class="btn btn-green" onclick="setNow()">الآن 🕒</button>
+        <button class="btn btn-green" onclick="setNow()">الوقت الحالي 🕒</button>
     </div>
     <div class="location-row">
         <select id="citySelect" onchange="updateCoords()">
@@ -39,13 +39,13 @@
         </select>
         <input type="text" id="lat" placeholder="خط العرض" onchange="calculate()">
         <input type="text" id="lon" placeholder="خط الطول" onchange="calculate()">
-        <button class="btn btn-blue" onclick="getLocation()">تلقائي 📍</button>
+        <button class="btn btn-blue" onclick="getLocation()">موقعي الحالي 📍</button>
     </div>
 
     <div class="input-group">
         <input type="text" id="conjDisplay" placeholder="الاقتران" readonly>
         <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly>
-        <button class="btn btn-blue" onclick="calculate()">حساب 🧮</button>
+        <button class="btn btn-blue" onclick="calculate()">أحسب 🧮</button>
     </div>
 
     <div id="results-area"></div>
@@ -54,7 +54,7 @@
 <script>
     // 1. التهيئة التلقائية عند التحميل
     window.onload = () => {
-        flatpickr("#dateInput", { dateFormat: "m/d/Y" });
+        flatpickr("#dateInput", { dateFormat: "d/m/Y" }); // تحديد تنسيق التاريخ
         flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
         
         const now = new Date();
@@ -87,7 +87,7 @@
     function getConjunctionTime(dateObj) {
         // معادلة تجريبية للربط:
         let hour = 7 + (dateObj.getDate() % 5);
-        return `${hour}:32`;
+        return `${hour}:32`; // اظهار وقت الاقتران
     }
 
     // 4. دالة الحساب الموحدة
@@ -108,9 +108,10 @@
         document.getElementById('sunsetDisplay').value = "18:05";
         // هنا تظهر النتائج
         document.getElementById('results-area').innerHTML = `
-            <div class="result-item"><span>عمر الهلال:</span> <span>10 س 32 د</span></div>
+            <div class="result-item"><span>عمر الهلال:</span> <span>10 س 32 د</span></div> 
             <div class="result-item"><span>الارتفاع:</span> <span>5.42°</span></div>
             <div class="result-item"><span>الاستطالة:</span> <span>10.15°</span></div>`;
+        // الى هنا النتائج
     }
 
     function setNow() {
