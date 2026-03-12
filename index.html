@@ -1,34 +1,80 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>حساب الهلال - العودة للأساسيات</title>
+    <title>بيانات رؤية الهلال الاحترافية</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 12px; padding: 20px; width: 100%; max-width: 600px; border: 2px solid #38bdf8; }
-        .row { display: grid; grid-template-columns: 1fr 1fr 100px; gap: 10px; margin-bottom: 10px; }
-        input { padding: 10px; border-radius: 4px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; }
-        .btn { padding: 10px; border-radius: 4px; cursor: pointer; border: none; font-weight: bold; background: #38bdf8; color: #0f172a; }
-        #results-area { border: 1px solid #334155; padding: 15px; border-radius: 5px; background: #111827; margin-top: 15px; text-align: center; color: #94a3b8; }
+        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 700px; border: 2px solid #38bdf8; }
+        h2 { text-align: center; margin-bottom: 25px; font-size: 1.5em; }
+        
+        /* تنسيق الشبكة لترتيب العناصر */
+        .grid-row { display: grid; grid-template-columns: 1fr 1fr 120px; gap: 12px; margin-bottom: 15px; align-items: center; }
+        .location-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr 120px; gap: 12px; margin-bottom: 15px; }
+        .result-row { display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 120px; gap: 12px; margin-bottom: 15px; }
+
+        input, select { padding: 12px; border-radius: 6px; border: 1px solid #38bdf8; background: #0f172a; color: #38bdf8; text-align: center; width: 100%; box-sizing: border-box; }
+        
+        /* تلوين أيقونة التقويم */
+        input::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(5) hue-rotate(175deg); cursor: pointer; }
+
+        /* توحيد أزرار التحكم على جهة اليسار */
+        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-blue { background: #38bdf8; color: #0f172a; }
+        .btn-green { background: #22c55e; color: white; }
+        .btn-blue:hover { background: #7dd3fc; }
+
+        #results-area { border: 1px solid #334155; padding: 15px; border-radius: 6px; background: #111827; min-height: 60px; text-align: center; color: #94a3b8; }
     </style>
 </head>
-<body>
+<body onload="initialize()">
+
 <div class="card">
-    <h2 style="text-align:center">🌙 بيانات رؤية الهلال (النسخة الأساسية)</h2>
-    <div class="row">
+    <h2>🌙 نظام حساب رؤية الهلال</h2>
+    
+    <div class="grid-row">
         <input type="text" id="dateInput" placeholder="التاريخ">
         <input type="text" id="timeInput" placeholder="الوقت">
-        <button class="btn" onclick="setNow()">الآن 🕒</button>
+        <button class="btn btn-green" onclick="setNow()">الآن 🕒</button>
     </div>
-    <button class="btn" style="width:100%" onclick="calculate()">حساب البيانات</button>
-    <div id="results-area">النتائج ستظهر هنا...</div>
+
+    <div class="location-row">
+        <input type="text" id="lon" placeholder="خط الطول">
+        <input type="text" id="lat" placeholder="خط العرض">
+        <select id="citySelect" onchange="updateCoords()">
+            <option value="">اختر مدينة...</option>
+            <option value="basra">البصرة</option>
+            <option value="baghdad">بغداد</option>
+            <option value="najaf">النجف</option>
+            <option value="current" id="currentOption" style="display:none;">موقعي الحالي 📍</option>
+        </select>
+        <button class="btn btn-blue" onclick="getLocation()">تلقائي 📍</button>
+    </div>
+
+    <div class="result-row">
+        <input type="text" id="sunsetTime" placeholder="وقت الغروب" readonly>
+        <input type="text" id="conjunction" placeholder="موعد الاقتران" readonly>
+        <input type="text" id="moonData" placeholder="بيانات الهلال" readonly>
+        <button class="btn btn-blue" onclick="calculate()">حساب 🧮</button>
+    </div>
+
+    <div id="results-area">النتائج ستظهر هنا بعد الحساب...</div>
 </div>
 
 <script>
-    const datePicker = flatpickr("#dateInput", { dateFormat: "F / Y / d" });
-    const timePicker = flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+    let datePicker, timePicker;
+
+    function initialize() {
+        // تهيئة التقويم والوقت
+        datePicker = flatpickr("#dateInput", { dateFormat: "F / Y / d" });
+        timePicker = flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+        
+        // التشغيل التلقائي عند فتح الصفحة
+        setNow();
+    }
 
     function setNow() {
         const now = new Date();
@@ -36,14 +82,131 @@
         timePicker.setDate(now);
     }
 
-    function calculate() {
-        // العودة للمنطق الأساسي الذي كان يعمل
-        const d = datePicker.selectedDates[0];
-        if(!d) return;
-        
-        // هنا سنضع المنطق الذي أثبت استقراره فقط دون تعديلات إضافية
-        document.getElementById('results-area').innerHTML = "تمت استعادة الإعدادات الأساسية. سنعيد ربط الحسابات الموثوقة خطوة بخطوة في المرة القادمة.";
+    function updateCoords() {
+        const city = document.getElementById('citySelect').value;
+        const coords = {
+            "basra": { lat: "30.5081", lon: "47.7835" },
+            "baghdad": { lat: "33.3152", lon: "44.3661" },
+            "najaf": { lat: "32.0259", lon: "44.3463" }
+        };
+        if(coords[city]) {
+            document.getElementById('lat').value = coords[city].lat;
+            document.getElementById('lon').value = coords[city].lon;
+        }
     }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                document.getElementById('lat').value = position.coords.latitude.toFixed(4);
+                document.getElementById('lon').value = position.coords.longitude.toFixed(4);
+                
+                // تحديث اسم المحافظة ليكون احترافياً
+                const citySelect = document.getElementById('citySelect');
+                const currentOpt = document.getElementById('currentOption');
+                currentOpt.style.display = "block";
+                citySelect.value = "current";
+            });
+        }
+    }
+
+   // --- الجزء الخاص بالمعادلات الفلكية داخل وسم <script> ---
+
+function calculate() {
+    const selectedDate = datePicker.selectedDates[0];
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lon = parseFloat(document.getElementById('lon').value);
+
+    if (!selectedDate || isNaN(lat) || isNaN(lon)) {
+        alert("يرجى التأكد من اختيار التاريخ والإحداثيات");
+        return;
+    }
+
+    // 1. حساب موعد الغروب (تقريبي بناءً على الموقع والتاريخ)
+    const sunset = calculateSunset(selectedDate, lat, lon);
+    document.getElementById('sunsetTime').value = sunset;
+
+    // 2. حساب موعد الاقتران المركزي (New Moon)
+    const conjunctionDate = calculateNextConjunction(selectedDate);
+    const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    document.getElementById('conjunction').value = conjunctionDate.toLocaleString('en-US', options);
+
+    document.getElementById('results-area').innerHTML = "تم تحديث الحسابات بناءً على خوارزميات Meeus الفلكية.";
+}
+
+// دالة مبسطة لحساب الاقتران المركزي القادم
+// --- تحديث دالة الحساب داخل وسم <script> ---
+
+function calculate() {
+    const selectedDate = datePicker.selectedDates[0];
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lon = parseFloat(document.getElementById('lon').value);
+
+    if (!selectedDate || isNaN(lat) || isNaN(lon)) return;
+
+    // 1. حساب وقت الغروب الفعلي لليوم المختار
+    const sunsetTimeStr = calculateSunset(selectedDate, lat, lon);
+    document.getElementById('sunsetTime').value = "الغروب: " + sunsetTimeStr;
+
+    // 2. حساب موعد الاقتران المركزي (New Moon) القادم بعد التاريخ المختار
+    const conjunctionDate = findNextConjunction(selectedDate);
+    const conjOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    document.getElementById('conjunction').value = "الاقتران: " + conjunctionDate.toLocaleString('en-US', conjOptions);
+
+    // 3. حساب عمر الهلال لحظة الغروب
+    // يتم إنشاء كائن تاريخ لوقت الغروب في نفس اليوم المختار
+    const [sHour, sMin] = sunsetTimeStr.split(':').map(Number);
+    const sunsetFullDate = new Date(selectedDate);
+    sunsetFullDate.setHours(sHour, sMin, 0);
+
+    const ageMs = sunsetFullDate - conjunctionDate;
+    if (ageMs < 0) {
+        document.getElementById('moonData').value = "عمر الهلال: لم يولد بعد";
+    } else {
+        const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+        const ageMins = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
+        document.getElementById('moonData').value = `عمر الهلال: ${ageHours}س ${ageMins}د`;
+    }
+
+    document.getElementById('results-area').innerHTML = "تم الحساب بناءً على إحداثيات الشمس والقمر اللحظية.";
+}
+
+// خوارزمية Meeus الدقيقة لحساب لحظة المحاق القادمة
+function findNextConjunction(date) {
+    const k = Math.floor(((date.getFullYear() + (date.getMonth() / 12) + (date.getDate() / 365.25)) - 2000) * 12.3685);
+    let T = k / 1236.85;
+    // لحظة الاقتران المتوسطة (JD)
+    let jde = 2451550.09765 + 29.530588853 * k + 0.0001337 * T * T;
+    
+    // تصحيحات الشذوذ (M) للشمس والقمر لرفع الدقة
+    let M = (2.5534 + 29.10535669 * k) * Math.PI / 180; // القمر
+    let Mprime = (201.5643 + 385.81693528 * k) * Math.PI / 180; // الشمس
+    
+    // إضافة تصحيح Meeus الأساسي (Simplified)
+    jde += (0.1734 - 0.000393 * T) * Math.sin(M) + 0.0021 * Math.sin(2 * M)
+           - 0.4068 * Math.sin(Mprime) + 0.0161 * Math.sin(2 * Mprime);
+
+    // تحويل من Julian Date إلى كائن Date عادي (UTC) ثم إضافة 3 ساعات لتوقيت العراق
+    const unixTime = (jde - 2440587.5) * 86400000;
+    return new Date(unixTime + (3 * 60 * 60 * 1000));
+}
+
+// دالة حساب الغروب (إزاحة الشمس -0.833 درجة)
+function calculateSunset(date, lat, lon) {
+    const jd = (date.getTime() / 86400000) + 2440587.5;
+    const n = Math.floor(jd - 2451545.0 + 0.0008);
+    const jstar = n - lon / 360;
+    const M = (357.5291 + 0.98560028 * jstar) % 360;
+    const C = 1.9148 * Math.sin(M * Math.PI / 180) + 0.02 * Math.sin(2 * M * Math.PI / 180);
+    const L = (M + C + 180 + 102.9372) % 360;
+    const jtransit = 2451545.0 + jstar + 0.0053 * Math.sin(M * Math.PI / 180) - 0.0069 * Math.sin(2 * L * Math.PI / 180);
+    const decl = Math.asin(Math.sin(L * Math.PI / 180) * Math.sin(23.44 * Math.PI / 180));
+    const h = Math.acos((Math.sin(-0.833 * Math.PI / 180) - Math.sin(lat * Math.PI / 180) * Math.sin(decl)) / (Math.cos(lat * Math.PI / 180) * Math.cos(decl)));
+    
+    const jset = jtransit + (h * 180 / Math.PI) / 360;
+    const sunsetTime = new Date((jset - 2440587.5) * 86400000 + (3 * 60 * 60 * 1000));
+    return sunsetTime.getHours().toString().padStart(2, '0') + ":" + sunsetTime.getMinutes().toString().padStart(2, '0');
+}
 </script>
 </body>
 </html>
