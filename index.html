@@ -53,14 +53,39 @@
 
 <script>
     // 1. التهيئة التلقائية عند التحميل
-    window.onload = () => {
+   /* window.onload = () => {
         flatpickr("#dateInput", { dateFormat: "d/m/Y" }); // تحديد تنسيق التاريخ
         flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
         
         const now = new Date();
         document.getElementById('dateInput').value = now.toLocaleDateString();
         document.getElementById('timeInput').value = now.getHours() + ":" + now.getMinutes();
-        
+       */
+    // تغيير تنسيق الوقت 
+window.onload = () => {
+    // d = اليوم، F = اسم الشهر كاملاً، Y = السنة
+    flatpickr("#dateInput", { dateFormat: "d F Y" }); 
+
+    // noCalendar: true (للوقت فقط)، dateFormat: "h:i K" (الساعة:الدقيقة ثم AM/PM)
+    flatpickr("#timeInput", { 
+        enableTime: true, 
+        noCalendar: true, 
+        dateFormat: "h:i K", 
+        time_24hr: false 
+    });
+    
+    const now = new Date();
+    
+    // تنسيق التاريخ الافتراضي: 13 March 2026
+    const dateOptions = { day: '2-digit', month: 'long', year: 'numeric' };
+    document.getElementById('dateInput').value = now.toLocaleDateString('en-GB', dateOptions);
+    
+    // تنسيق الوقت الافتراضي: 01:21 AM
+    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+    document.getElementById('timeInput').value = now.toLocaleTimeString('en-US', timeOptions);
+};
+
+      // تغيير تنسيق الوقت  الى هنا
         getLocation();
     };
 
