@@ -53,16 +53,17 @@
 
 <script>
     // 1. التهيئة التلقائية عند التحميل
-   /* window.onload = () => {
+   window.onload = () => {
         flatpickr("#dateInput", { dateFormat: "d/m/Y" }); // تحديد تنسيق التاريخ
         flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
         
         const now = new Date();
         document.getElementById('dateInput').value = now.toLocaleDateString();
         document.getElementById('timeInput').value = now.getHours() + ":" + now.getMinutes();
-       */
+      
+    /*
     // تغيير تنسيق الوقت 
-window.onload = () => {
+    window.onload = () => {
     // d = اليوم، F = اسم الشهر كاملاً، Y = السنة
     flatpickr("#dateInput", { dateFormat: "d F Y" }); 
 
@@ -85,7 +86,9 @@ window.onload = () => {
     document.getElementById('timeInput').value = now.toLocaleTimeString('en-US', timeOptions);
 };
 
+      
       // تغيير تنسيق الوقت  الى هنا
+       */
         getLocation();
     };
 
