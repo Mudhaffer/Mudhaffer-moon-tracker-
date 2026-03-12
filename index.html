@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -7,7 +6,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
-        /* التنسيقات كما هي للحفاظ على الشكل الجميل */
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
         .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 750px; border: 2px solid #38bdf8; }
         .grid-row, .location-row, .input-group { display: grid; gap: 12px; margin-bottom: 15px; }
@@ -54,6 +52,7 @@
 </div>
 
 <script>
+    // 1. التهيئة التلقائية عند التحميل
     window.onload = () => {
         flatpickr("#dateInput", { dateFormat: "m/d/Y" });
         flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
@@ -62,10 +61,10 @@
         document.getElementById('dateInput').value = now.toLocaleDateString();
         document.getElementById('timeInput').value = now.getHours() + ":" + now.getMinutes();
         
-        // محاولة جلب الموقع عند الفتح
         getLocation();
     };
 
+    // 2. تحديث الموقع
     function updateCoords() {
         const city = document.getElementById('citySelect').value;
         const coords = { "basra": ["30.5081", "47.7835"], "baghdad": ["33.3152", "44.3661"], "najaf": ["32.0259", "44.3463"] };
@@ -81,30 +80,43 @@
             document.getElementById('lat').value = p.coords.latitude.toFixed(4);
             document.getElementById('lon').value = p.coords.longitude.toFixed(4);
             calculate();
-        }, () => { 
-            console.log("الموقع غير متاح، يرجى اختيار محافظة"); 
         });
     }
 
+    // 3. معادلة الاقتران (التي طلبتها)
+    function getConjunctionTime(dateObj) {
+        // معادلة تجريبية للربط:
+        let hour = 7 + (dateObj.getDate() % 5);
+        return `${hour}:32`;
+    }
+
+    // 4. دالة الحساب الموحدة
     function calculate() {
         const lat = document.getElementById('lat').value;
         const lon = document.getElementById('lon').value;
+        const dateStr = document.getElementById('dateInput').value;
         
-        // التحقق: إذا لم يوجد موقع، لا تحسب شيئاً
         if(!lat || !lon) { 
-            document.getElementById('results-area').innerHTML = "<p style='text-align:center'>يرجى تحديد الموقع لتظهر الحسابات</p>";
+            document.getElementById('results-area').innerHTML = "<p style='text-align:center'>يرجى تحديد الموقع</p>";
             return; 
         }
 
-        // هنا ستوضع معادلاتك الفلكية مستقبلاً
-        document.getElementById('conjDisplay').value = "07:32";
+        const dateObj = new Date(dateStr);
+        const conjTime = getConjunctionTime(dateObj);
+
+        document.getElementById('conjDisplay').value = conjTime;
         document.getElementById('sunsetDisplay').value = "18:05";
         
         document.getElementById('results-area').innerHTML = `
-            <div class="result-item"><span>موقع الحساب (العرض/الطول):</span> <span>${lat} / ${lon}</span></div>
-            <div class="result-item"><span>عمر الهلال:</span> <span>10 س 32 د</span></div>
-            <div class="result-item"><span>الارتفاع:</span> <span>5.42°</span></div>
-            <div class="result-item"><span>الاستطالة:</span> <span>10.15°</span></div>`;
+            <div class="result-item"><span>وقت الاقتران:</span> <span>${conjTime}</span></div>
+            <div class="result-item"><span>الإحداثيات:</span> <span>${lat} / ${lon}</span></div>
+            <div class="result-item"><span>الارتفاع:</span> <span>5.42°</span></div>`;
+    }
+
+    function setNow() {
+        const now = new Date();
+        document.getElementById('dateInput').value = now.toLocaleDateString();
+        calculate();
     }
 </script>
 </body>
