@@ -100,68 +100,37 @@
             });
         }
     }
+// من هنا التغيير في الحسابات
+   // التعديل في دالة الحساب لتصبح تلقائية
+function updateAndCalculate() {
+    // هذه الدالة سيتم استدعاؤها تلقائياً عند تغيير المدخلات
+    calculate();
+}
 
-    function calculate() {
-        const d = datePicker.selectedDates[0];
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
+function calculate() {
+    const d = datePicker.selectedDates[0];
+    const lat = parseFloat(document.getElementById('lat').value);
+    const lon = parseFloat(document.getElementById('lon').value);
 
-        if (!d || isNaN(lat)) return alert("يرجى إكمال البيانات");
+    // 1. حساب لحظة الاقتران المركزي (بالتوقيت المحلي)
+    const conjDate = findConjunction(d);
+    
+    // 2. حساب عمر الهلال (بالساعة والدقيقة)
+    const now = new Date();
+    const diffMs = now - conjDate;
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffMins = Math.floor((diffMs % 3600000) / 60000);
 
-        // 1. حساب لحظة الاقتران المركزي (Meeus)
-        const conjDate = findConjunction(d);
-        
-        // 2. حساب الغروب (Atmospheric Refraction -0.833)
-        const sunsetStr = getSunset(d, lat, lon);
-        
-        // 3. حساب عمر الهلال لحظة الغروب
-        const [h, m] = sunsetStr.split(':').map(Number);
-        const sunsetDate = new Date(d);
-        sunsetDate.setHours(h, m, 0);
-        
-        const ageMs = sunsetDate - conjDate;
-        const ageHours = Math.floor(ageMs / 3600000);
-        const ageMins = Math.floor((ageMs % 3600000) / 60000);
-
-        // تحديث الخانات العلوية
-        document.getElementById('sunsetDisplay').value = "الغروب: " + sunsetStr;
-        document.getElementById('conjDisplay').value = "الاقتران: " + conjDate.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-        document.getElementById('moonAgeDisplay').value = ageMs > 0 ? `عمر الهلال: ${ageHours}س ${ageMins}د` : "لم يولد بعد";
-
-        // إظهار النتائج السفلية (كما في الصورة 12-3-3)
-        showBottomResults(ageMs, ageHours, ageMins);
-    }
-
-    function findConjunction(date) {
-        const k = Math.floor(((date.getFullYear() + (date.getMonth()/12) + (date.getDate()/365)) - 2000) * 1236.85 / 100);
-        let T = k / 1236.85;
-        let jde = 2451550.09765 + 29.530588853 * k; // الوسط الحسابي
-        // تصحيح Meeus الأساسي
-        let M = (2.5534 + 29.1053567 * k) * Math.PI / 180;
-        let Mprime = (201.5643 + 385.816935 * k) * Math.PI / 180;
-        jde += (0.1734 * Math.sin(M)) - (0.4068 * Math.sin(Mprime));
-        
-        return new Date((jde - 2440587.5) * 86400000 + (3 * 3600000)); // توقيت العراق
-    }
-
-    function getSunset(date, lat, lon) {
-        // معادلة الغروب القياسية بتصحيح الانكسار
-        return "18:05"; // سيتم تعويضها بالمعادلة الرياضية الدقيقة في النسخة النهائية
-    }
-
-    function showBottomResults(ageMs, h, m) {
-        const resultsArea = document.getElementById('results-container');
-        if (ageMs < 0) {
-            resultsArea.innerHTML = `<div style="text-align:center; color:#ef4444;">القمر لم يصل لمرحلة الاقتران بعد في هذا التاريخ.</div>`;
-            return;
-        }
-        
-        resultsArea.innerHTML = `
-            <div class="result-item"><span class="result-label">ارتفاع القمر:</span> <span class="result-value">5.42°</span></div>
-            <div class="result-item"><span class="result-label">الاستطالة (البعد الزاوي):</span> <span class="result-value">10.15°</span></div>
-            <div class="result-item"><span class="result-label">عمر الهلال لحظة الغروب:</span> <span class="result-value">${h} ساعة، ${m} دقيقة</span></div>
-        `;
-    }
+    // 3. تحديث واجهة النتائج تلقائياً
+    // بدلاً من الرسالة الخطأ، سنعرض القيم دائماً
+    document.getElementById('results-area').innerHTML = `
+        <div id="results-container">
+            <div class="result-item"><span>عمر الهلال:</span> <span class="result-value">${diffHours} س ${diffMins} د</span></div>
+            <div class="result-item"><span>ارتفاع القمر:</span> <span class="result-value">سيتم حسابه</span></div>
+            <div class="result-item"><span>الاستطالة:</span> <span class="result-value">سيتم حسابه</span></div>
+        </div>`;
+}
+    // الى هنا
 </script>
 
 </body>
