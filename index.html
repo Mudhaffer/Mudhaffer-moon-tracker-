@@ -54,7 +54,7 @@
 <script>
     // --- بداية مرحلة التهيئة ---
     window.onload = () => {
-        flatpickr("#dateInput", { dateFormat: "m/d/Y" });
+        flatpickr("#dateInput", { dateFormat: "d/F/Y" }); // يجب تغييرها الى اسم الشهر
         flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
         
         const now = new Date();
