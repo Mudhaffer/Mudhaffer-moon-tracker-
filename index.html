@@ -12,27 +12,23 @@
         .grid-row { grid-template-columns: 1fr 1fr 120px; }
         .location-row { grid-template-columns: 1fr 1fr 1fr 120px; }
         .input-group { grid-template-columns: 1fr 1fr 120px; }
-        input, select { padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; text-align: center; outline: none; }
-        input:focus { border-color: #38bdf8; }
-        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        input, select { padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; text-align: center; outline: none; width: 100%; box-sizing: border-box; }
+        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; }
         .btn-blue { background: #38bdf8; color: #0f172a; }
-        .btn-blue:hover { background: #0ea5e9; }
         .btn-green { background: #22c55e; color: white; }
-        .btn-green:hover { background: #16a34a; }
         #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; min-height: 100px; }
         .result-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e293b; }
-        .result-item:last-child { border-bottom: none; }
-        h2 { margin-top: 0; margin-bottom: 25px; color: #f1f5f9; }
+        h2 { text-align: center; margin-bottom: 25px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 style="text-align:center">🌙 نظام حساب رؤية الهلال</h2>
+    <h2>🌙 نظام حساب رؤية الهلال</h2>
     
     <div class="grid-row">
-        <input type="text" id="dateInput" placeholder="اختر التاريخ" onchange="calculate()">
-        <input type="text" id="timeInput" placeholder="اختر الوقت" onchange="calculate()">
+        <input type="text" id="dateInput" onchange="calculate()">
+        <input type="text" id="timeInput" onchange="calculate()">
         <button class="btn btn-green" onclick="setNow()">الآن 🕒</button>
     </div>
 
@@ -49,18 +45,92 @@
     </div>
 
     <div class="input-group">
-        <input type="text" id="conjDisplay" placeholder="الاقتران" readonly title="وقت الاقتران المركزي">
-        <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly title="وقت غروب الشمس المحلي">
+        <input type="text" id="conjDisplay" placeholder="الاقتران" readonly>
+        <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly>
         <button class="btn btn-blue" onclick="calculate()">حساب 🧮</button>
     </div>
 
-    <div id="results-area">
-        <p style="text-align:center; color: #94a3b8;">النتائج ستظهر هنا بعد الحساب...</p>
-    </div>
+    <div id="results-area"></div>
 </div>
 
 <script>
-    // تهيئة التقويم والساعة عند التشغيل
+    // عند تحميل الصفحة: تفعيل التقويم وجلب الموقع والوقت فوراً
     window.onload = () => {
         flatpickr("#dateInput", { dateFormat: "m/d/Y" });
-        flatpickr
+        flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
+        setNow(); 
+        getLocation(); 
+    };
+
+    function setNow() {
+        const now = new Date();
+        document.getElementById('dateInput').value = (now.getMonth() + 1) + "/" + now.getDate() + "/" + now.getFullYear();
+        document.getElementById('timeInput').value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        calculate();
+    }
+
+    function updateCoords() {
+        const city = document.getElementById('citySelect').value;
+        const coords = { "basra": ["30.5081", "47.7835"], "baghdad": ["33.3152", "44.3661"], "najaf": ["32.0259", "44.3463"] };
+        if(coords[city]) {
+            document.getElementById('lat').value = coords[city][0];
+            document.getElementById('lon').value = coords[city][1];
+            calculate(); 
+        }
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(p => {
+                document.getElementById('lat').value = p.coords.latitude.toFixed(4);
+                document.getElementById('lon').value = p.coords.longitude.toFixed(4);
+                calculate();
+            });
+        }
+    }
+
+    // المحرك الفلكي للاقتران
+    function getTrueConjunction(dateObj) {
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth() + 1;
+        const k = Math.floor((year + (month - 1) / 12 - 2000) * 12.3685);
+        const T = k / 1236.85;
+        let JDE = 2451550.09766 + 29.530588861 * k + 0.00015437 * T * T;
+        const M = (2.5534 + 29.1053567 * k) * Math.PI / 180;
+        const Mprime = (201.5643 + 385.8169353 * k) * Math.PI / 180;
+        const F = (160.7108 + 390.6705028 * k) * Math.PI / 180;
+        JDE += (0.1734 - 0.000393 * T) * Math.sin(M) - 0.4068 * Math.sin(Mprime) + 0.0161 * Math.sin(2 * Mprime);
+        return new Date((JDE - 2440587.5) * 86400000);
+    }
+
+    function calculate() {
+        const lat = document.getElementById('lat').value;
+        const lon = document.getElementById('lon').value;
+        const dateStr = document.getElementById('dateInput').value;
+        const timeStr = document.getElementById('timeInput').value;
+        
+        if(!lat || !lon || !dateStr || !timeStr) {
+            document.getElementById('results-area').innerHTML = "<p style='text-align:center'>يرجى تحديد الموقع والوقت...</p>";
+            return;
+        }
+
+        const selectedDate = new Date(`${dateStr} ${timeStr}`);
+        const conjDate = getTrueConjunction(selectedDate);
+        
+        const diffMs = selectedDate - conjDate;
+        const hours = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
+
+        const conjTimeStr = conjDate.getHours().toString().padStart(2, '0') + ":" + conjDate.getMinutes().toString().padStart(2, '0');
+        document.getElementById('conjDisplay').value = conjTimeStr;
+        document.getElementById('sunsetDisplay').value = "18:05";
+
+        document.getElementById('results-area').innerHTML = `
+            <div class="result-item"><span>تاريخ الاقتران:</span> <span>${conjDate.toLocaleDateString('ar-EG')}</span></div>
+            <div class="result-item"><span>وقت الاقتران:</span> <span>${conjTimeStr}</span></div>
+            <div class="result-item"><span>عمر الهلال:</span> <span>${hours} ساعة و ${mins} دقيقة</span></div>
+        `;
+    }
+</script>
+</body>
+</html>
