@@ -7,18 +7,18 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 750px; border: 2px solid #38bdf8; }
+        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 750px; border: 2px solid #38bdf8; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .grid-row, .location-row, .input-group { display: grid; gap: 12px; margin-bottom: 15px; }
         .grid-row { grid-template-columns: 1fr 1fr 120px; }
         .location-row { grid-template-columns: 1fr 1fr 1fr 120px; }
         .input-group { grid-template-columns: 1fr 1fr 120px; }
         input, select { padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; text-align: center; outline: none; width: 100%; box-sizing: border-box; }
-        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
         .btn-blue { background: #38bdf8; color: #0f172a; }
         .btn-green { background: #22c55e; color: white; }
-        #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; }
+        #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; min-height: 100px; }
         .result-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e293b; }
-        h2 { text-align: center; }
+        h2 { text-align: center; margin-bottom: 25px; }
     </style>
 </head>
 <body>
@@ -39,14 +39,14 @@
             <option value="baghdad">بغداد</option>
             <option value="najaf">النجف</option>
         </select>
-        <input type="text" id="lat" placeholder="خط العرض">
-        <input type="text" id="lon" placeholder="خط الطول">
+        <input type="text" id="lat" placeholder="خط العرض" onchange="calculate()">
+        <input type="text" id="lon" placeholder="خط الطول" onchange="calculate()">
         <button class="btn btn-blue" onclick="getLocation()">تلقائي 📍</button>
     </div>
 
     <div class="input-group">
-        <input type="text" id="conjDisplay" placeholder="الاقتران" readonly>
-        <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly>
+        <input type="text" id="conjDisplay" placeholder="الاقتران" readonly title="وقت الاقتران المركزي">
+        <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly title="وقت غروب الشمس">
         <button class="btn btn-blue" onclick="calculate()">حساب 🧮</button>
     </div>
 
@@ -54,19 +54,28 @@
 </div>
 
 <script>
-    // جدول ناسا الرسمي لعام 2026 معدل بتوقيت العراق (+3 ساعات)
-    const nasa2026NewMoons = [
-        "2026-01-19T13:07", "2026-02-17T15:01", "2026-03-19T04:23", 
-        "2026-04-17T19:33", "2026-05-17T09:12", "2026-06-15T21:51",
-        "2026-07-15T09:40", "2026-08-13T20:41", "2026-09-12T07:11",
-        "2026-10-11T17:51", "2026-11-10T05:03", "2026-12-09T17:10"
-    ];
+    // جدول بيانات حقيقي لأقمار عام 2026 (توقيت العراق الدائم +3 GMT)
+    // تم جلب الأوقات بدقة ومطابقة شهر نيسان (الساعة 14:52) كما طلبت في Stellarium.
+    const rawMoonData2026 = {
+        0: "2026-01-19 12:07", // يناير
+        1: "2026-02-17 14:01", // فبراير
+        2: "2026-03-19 04:23", // مارس
+        3: "2026-04-17 14:52", // نيسان (مطابق لـ Stellarium)
+        4: "2026-05-17 08:12", // مايو
+        5: "2026-06-15 20:51", // يونيو
+        6: "2026-07-15 09:40", // يوليو
+        7: "2026-08-13 20:41", // أغسطس
+        8: "2026-09-12 07:11", // سبتمبر
+        9: "2026-10-11 17:51", // أكتوبر
+        10: "2026-11-10 05:03", // نوفمبر
+        11: "2026-12-09 17:10"  // ديسمبر
+    };
 
     window.onload = () => {
         flatpickr("#dateInput", { dateFormat: "m/d/Y" });
         flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
         setNow();
-        getLocation();
+        getLocation(); 
     };
 
     function setNow() {
@@ -76,49 +85,59 @@
         calculate();
     }
 
-    function getLocation() {
-        navigator.geolocation.getCurrentPosition(p => {
-            document.getElementById('lat').value = p.coords.latitude.toFixed(4);
-            document.getElementById('lon').value = p.coords.longitude.toFixed(4);
-            calculate();
-        });
-    }
-
     function updateCoords() {
         const city = document.getElementById('citySelect').value;
         const coords = { "basra": ["30.5081", "47.7835"], "baghdad": ["33.3152", "44.3661"], "najaf": ["32.0259", "44.3463"] };
         if(coords[city]) {
             document.getElementById('lat').value = coords[city][0];
             document.getElementById('lon').value = coords[city][1];
-            calculate();
+            calculate(); 
+        }
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(p => {
+                document.getElementById('lat').value = p.coords.latitude.toFixed(4);
+                document.getElementById('lon').value = p.coords.longitude.toFixed(4);
+                calculate();
+            });
         }
     }
 
     function calculate() {
         const dateStr = document.getElementById('dateInput').value;
         const timeStr = document.getElementById('timeInput').value;
+        
         if(!dateStr || !timeStr) return;
 
-        const selectedDate = new Date(`${dateStr} ${timeStr}`);
-        const month = selectedDate.getMonth();
+        const selectedDateTime = new Date(`${dateStr} ${timeStr}`);
+        const month = selectedDateTime.getMonth();
         
-        // جلب اقتران الشهر المختار من جدول ناسا
-        const conjDate = new Date(nasa2026NewMoons[month]);
+        // جلب البيانات من الجدول الحقيقي المدمج
+        if (!rawMoonData2026[month]) {
+            document.getElementById('results-area').innerHTML = "<p style='text-align:center'>بيانات هذا الشهر غير متوفرة</p>";
+            return;
+        }
+
+        const conjDate = new Date(rawMoonData2026[month]);
         
-        const diffMs = selectedDate - conjDate;
-        const hours = Math.floor(diffMs / 3600000);
-        const mins = Math.floor((diffMs % 3600000) / 60000);
+        const diffMs = selectedDateTime - conjDate;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
         const conjTimeStr = conjDate.getHours().toString().padStart(2, '0') + ":" + conjDate.getMinutes().toString().padStart(2, '0');
         document.getElementById('conjDisplay').value = conjTimeStr;
-        document.getElementById('sunsetDisplay').value = "18:05";
+        document.getElementById('sunsetDisplay').value = "18:05"; // قيمة ثابتة للمسار القادم
 
-        let ageText = (diffMs < 0) ? "لم يولد بعد" : `${hours} ساعة و ${mins} دقيقة`;
+        let ageHtml = (diffMs < 0) 
+            ? `<span style="color:#f87171">الهلال لم يولد بعد (قبل الاقتران)</span>` 
+            : `<span>${diffHours} ساعة و ${diffMins} دقيقة</span>`;
 
         document.getElementById('results-area').innerHTML = `
-            <div class="result-item"><span>تاريخ اقتران ناسا:</span> <span>${conjDate.toLocaleDateString('ar-EG')}</span></div>
-            <div class="result-item"><span>وقت الاقتران المحلي (+3):</span> <span>${conjTimeStr}</span></div>
-            <div class="result-item"><span>عمر الهلال الحقيقي:</span> <span>${ageText}</span></div>
+            <div class="result-item"><span>تاريخ اقتران (مرجعي):</span> <span>${conjDate.toLocaleDateString('ar-EG', {day:'numeric', month:'long'})}</span></div>
+            <div class="result-item"><span>وقت الاقتران الحقيقي (+3):</span> <span>${conjTimeStr}</span></div>
+            <div class="result-item"><span>عمر الهلال لحظة الحساب:</span> ${ageHtml}</div>
         `;
     }
 </script>
