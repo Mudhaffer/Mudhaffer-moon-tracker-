@@ -7,17 +7,22 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 750px; border: 2px solid #38bdf8; }
+        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 750px; border: 2px solid #38bdf8; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .grid-row, .location-row, .input-group { display: grid; gap: 12px; margin-bottom: 15px; }
         .grid-row { grid-template-columns: 1fr 1fr 120px; }
         .location-row { grid-template-columns: 1fr 1fr 1fr 120px; }
         .input-group { grid-template-columns: 1fr 1fr 120px; }
-        input, select { padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; text-align: center; }
-        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        input, select { padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; text-align: center; outline: none; }
+        input:focus { border-color: #38bdf8; }
+        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-blue { background: #38bdf8; color: #0f172a; }
+        .btn-blue:hover { background: #0ea5e9; }
         .btn-green { background: #22c55e; color: white; }
+        .btn-green:hover { background: #16a34a; }
         #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; min-height: 100px; }
         .result-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e293b; }
+        .result-item:last-child { border-bottom: none; }
+        h2 { margin-top: 0; margin-bottom: 25px; color: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -26,10 +31,11 @@
     <h2 style="text-align:center">🌙 نظام حساب رؤية الهلال</h2>
     
     <div class="grid-row">
-        <input type="text" id="dateInput" onchange="calculate()">
-        <input type="text" id="timeInput" onchange="calculate()">
+        <input type="text" id="dateInput" placeholder="اختر التاريخ" onchange="calculate()">
+        <input type="text" id="timeInput" placeholder="اختر الوقت" onchange="calculate()">
         <button class="btn btn-green" onclick="setNow()">الآن 🕒</button>
     </div>
+
     <div class="location-row">
         <select id="citySelect" onchange="updateCoords()">
             <option value="">اختر المدينة</option>
@@ -43,111 +49,18 @@
     </div>
 
     <div class="input-group">
-        <input type="text" id="conjDisplay" placeholder="الاقتران" readonly>
-        <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly>
+        <input type="text" id="conjDisplay" placeholder="الاقتران" readonly title="وقت الاقتران المركزي">
+        <input type="text" id="sunsetDisplay" placeholder="الغروب" readonly title="وقت غروب الشمس المحلي">
         <button class="btn btn-blue" onclick="calculate()">حساب 🧮</button>
     </div>
 
-    <div id="results-area"></div>
+    <div id="results-area">
+        <p style="text-align:center; color: #94a3b8;">النتائج ستظهر هنا بعد الحساب...</p>
+    </div>
 </div>
 
 <script>
-    // --- بداية مرحلة التهيئة ---
+    // تهيئة التقويم والساعة عند التشغيل
     window.onload = () => {
-        flatpickr("#dateInput", { dateFormat: "d/F/Y" }); // يجب تغييرها الى اسم الشهر
-        flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
-        
-        const now = new Date();
-        document.getElementById('dateInput').value = now.toLocaleDateString();
-        document.getElementById('timeInput').value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        
-        getLocation();
-    };
-
-    function setNow() {
-        const now = new Date();
-        document.getElementById('dateInput').value = now.toLocaleDateString();
-        document.getElementById('timeInput').value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        calculate();
-    }
-    // --- نهاية مرحلة التهيئة ---
-
-    // --- بداية مرحلة الموقع الجغرافي ---
-    function updateCoords() {
-        const city = document.getElementById('citySelect').value;
-        const coords = { "basra": ["30.5081", "47.7835"], "baghdad": ["33.3152", "44.3661"], "najaf": ["32.0259", "44.3463"] };
-        if(coords[city]) {
-            document.getElementById('lat').value = coords[city][0];
-            document.getElementById('lon').value = coords[city][1];
-            calculate(); 
-        }
-    }
-
-    function getLocation() {
-        navigator.geolocation.getCurrentPosition(p => {
-            document.getElementById('lat').value = p.coords.latitude.toFixed(4);
-            document.getElementById('lon').value = p.coords.longitude.toFixed(4);
-            calculate();
-        }, () => { console.log("الموقع غير متاح"); });
-    }
-    // --- نهاية مرحلة الموقع الجغرافي ---
-
-    // --- بداية مرحلة الحسابات الفلكية (المسار الأول) ---
-    // جدول مواعيد الاقتران العالمي لعام 2026 (توقيت العراق +3)
-const newMoonTable2026 = {
-    0: "2026-01-19T13:07:00", // يناير
-    1: "2026-02-17T15:01:00", // فبراير
-    2: "2026-03-19T05:22:00", // مارس (رمضان)
-    3: "2026-04-17T19:33:00", // أبريل
-    4: "2026-05-17T09:12:00", // مايو
-    5: "2026-06-15T21:51:00"  // يونيو
-};
-
-function getTrueConjunction(dateObj) {
-    const month = dateObj.getMonth();
-    // جلب التاريخ من الجدول المعتمد
-    if (newMoonTable2026[month]) {
-        return new Date(newMoonTable2026[month]);
-    }
-    // احتياطياً إذا خرجنا عن 2026 (معادلة بسيطة جداً)
-    return new Date(dateObj.getFullYear(), month, 19, 5, 22);
-}
-
-function calculate() {
-    const lat = document.getElementById('lat').value;
-    const lon = document.getElementById('lon').value;
-    const dateInput = document.getElementById('dateInput').value;
-    
-    if(!lat || !lon || !dateInput) return;
-
-    const selectedDate = new Date(dateInput);
-    const conjDate = getTrueConjunction(selectedDate);
-    
-    // حساب الفرق بالساعات (عمر الهلال)
-    const diffMs = selectedDate - conjDate;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    const conjStr = conjDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    const conjFullDate = conjDate.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
-
-    document.getElementById('conjDisplay').value = conjStr;
-    document.getElementById('sunsetDisplay').value = "18:05"; // سنقوم ببرمجتها لاحقاً
-    
-    let ageResult = "";
-    if (diffMs < 0) {
-        ageResult = "<span style='color:#f87171'>لم يولد بعد (قبل الاقتران)</span>";
-    } else {
-        ageResult = `${diffHours} ساعة و ${diffMins} دقيقة`;
-    }
-
-    document.getElementById('results-area').innerHTML = `
-        <div class="result-item"><span>تاريخ الاقتران المعتمد:</span> <span>${conjFullDate}</span></div>
-        <div class="result-item"><span>وقت الاقتران (بغداد):</span> <span>${conjStr}</span></div>
-        <div class="result-item"><span>عمر الهلال لحظة الحساب:</span> <span>${ageResult}</span></div>
-    `;
-}
-    // --- نهاية مرحلة الحسابات الفلكية ---
-</script>
-</body>
-</html>
+        flatpickr("#dateInput", { dateFormat: "m/d/Y" });
+        flatpickr
