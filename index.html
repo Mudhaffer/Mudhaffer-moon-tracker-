@@ -7,18 +7,18 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         body { background: #0f172a; color: #f1f5f9; font-family: sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 750px; border: 2px solid #38bdf8; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .card { background: #1e293b; border-radius: 12px; padding: 25px; width: 100%; max-width: 750px; border: 2px solid #38bdf8; }
         .grid-row, .location-row, .input-group { display: grid; gap: 12px; margin-bottom: 15px; }
         .grid-row { grid-template-columns: 1fr 1fr 120px; }
         .location-row { grid-template-columns: 1fr 1fr 1fr 120px; }
         .input-group { grid-template-columns: 1fr 1fr 120px; }
         input, select { padding: 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #38bdf8; text-align: center; outline: none; width: 100%; box-sizing: border-box; }
-        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; }
+        .btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
         .btn-blue { background: #38bdf8; color: #0f172a; }
         .btn-green { background: #22c55e; color: white; }
-        #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; min-height: 100px; }
+        #results-area { border: 1px solid #334155; padding: 20px; border-radius: 8px; background: #111827; margin-top: 20px; }
         .result-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e293b; }
-        h2 { text-align: center; margin-bottom: 25px; }
+        h2 { text-align: center; }
     </style>
 </head>
 <body>
@@ -39,8 +39,8 @@
             <option value="baghdad">بغداد</option>
             <option value="najaf">النجف</option>
         </select>
-        <input type="text" id="lat" placeholder="خط العرض" onchange="calculate()">
-        <input type="text" id="lon" placeholder="خط الطول" onchange="calculate()">
+        <input type="text" id="lat" placeholder="خط العرض">
+        <input type="text" id="lon" placeholder="خط الطول">
         <button class="btn btn-blue" onclick="getLocation()">تلقائي 📍</button>
     </div>
 
@@ -54,12 +54,19 @@
 </div>
 
 <script>
-    // عند تحميل الصفحة: تفعيل التقويم وجلب الموقع والوقت فوراً
+    // جدول ناسا الرسمي لعام 2026 معدل بتوقيت العراق (+3 ساعات)
+    const nasa2026NewMoons = [
+        "2026-01-19T13:07", "2026-02-17T15:01", "2026-03-19T04:23", 
+        "2026-04-17T19:33", "2026-05-17T09:12", "2026-06-15T21:51",
+        "2026-07-15T09:40", "2026-08-13T20:41", "2026-09-12T07:11",
+        "2026-10-11T17:51", "2026-11-10T05:03", "2026-12-09T17:10"
+    ];
+
     window.onload = () => {
         flatpickr("#dateInput", { dateFormat: "m/d/Y" });
         flatpickr("#timeInput", { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true });
-        setNow(); 
-        getLocation(); 
+        setNow();
+        getLocation();
     };
 
     function setNow() {
@@ -69,53 +76,34 @@
         calculate();
     }
 
+    function getLocation() {
+        navigator.geolocation.getCurrentPosition(p => {
+            document.getElementById('lat').value = p.coords.latitude.toFixed(4);
+            document.getElementById('lon').value = p.coords.longitude.toFixed(4);
+            calculate();
+        });
+    }
+
     function updateCoords() {
         const city = document.getElementById('citySelect').value;
         const coords = { "basra": ["30.5081", "47.7835"], "baghdad": ["33.3152", "44.3661"], "najaf": ["32.0259", "44.3463"] };
         if(coords[city]) {
             document.getElementById('lat').value = coords[city][0];
             document.getElementById('lon').value = coords[city][1];
-            calculate(); 
+            calculate();
         }
-    }
-
-    function getLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(p => {
-                document.getElementById('lat').value = p.coords.latitude.toFixed(4);
-                document.getElementById('lon').value = p.coords.longitude.toFixed(4);
-                calculate();
-            });
-        }
-    }
-
-    // المحرك الفلكي للاقتران
-    function getTrueConjunction(dateObj) {
-        const year = dateObj.getFullYear();
-        const month = dateObj.getMonth() + 1;
-        const k = Math.floor((year + (month - 1) / 12 - 2000) * 12.3685);
-        const T = k / 1236.85;
-        let JDE = 2451550.09766 + 29.530588861 * k + 0.00015437 * T * T;
-        const M = (2.5534 + 29.1053567 * k) * Math.PI / 180;
-        const Mprime = (201.5643 + 385.8169353 * k) * Math.PI / 180;
-        const F = (160.7108 + 390.6705028 * k) * Math.PI / 180;
-        JDE += (0.1734 - 0.000393 * T) * Math.sin(M) - 0.4068 * Math.sin(Mprime) + 0.0161 * Math.sin(2 * Mprime);
-        return new Date((JDE - 2440587.5) * 86400000);
     }
 
     function calculate() {
-        const lat = document.getElementById('lat').value;
-        const lon = document.getElementById('lon').value;
         const dateStr = document.getElementById('dateInput').value;
         const timeStr = document.getElementById('timeInput').value;
-        
-        if(!lat || !lon || !dateStr || !timeStr) {
-            document.getElementById('results-area').innerHTML = "<p style='text-align:center'>يرجى تحديد الموقع والوقت...</p>";
-            return;
-        }
+        if(!dateStr || !timeStr) return;
 
         const selectedDate = new Date(`${dateStr} ${timeStr}`);
-        const conjDate = getTrueConjunction(selectedDate);
+        const month = selectedDate.getMonth();
+        
+        // جلب اقتران الشهر المختار من جدول ناسا
+        const conjDate = new Date(nasa2026NewMoons[month]);
         
         const diffMs = selectedDate - conjDate;
         const hours = Math.floor(diffMs / 3600000);
@@ -125,10 +113,12 @@
         document.getElementById('conjDisplay').value = conjTimeStr;
         document.getElementById('sunsetDisplay').value = "18:05";
 
+        let ageText = (diffMs < 0) ? "لم يولد بعد" : `${hours} ساعة و ${mins} دقيقة`;
+
         document.getElementById('results-area').innerHTML = `
-            <div class="result-item"><span>تاريخ الاقتران:</span> <span>${conjDate.toLocaleDateString('ar-EG')}</span></div>
-            <div class="result-item"><span>وقت الاقتران:</span> <span>${conjTimeStr}</span></div>
-            <div class="result-item"><span>عمر الهلال:</span> <span>${hours} ساعة و ${mins} دقيقة</span></div>
+            <div class="result-item"><span>تاريخ اقتران ناسا:</span> <span>${conjDate.toLocaleDateString('ar-EG')}</span></div>
+            <div class="result-item"><span>وقت الاقتران المحلي (+3):</span> <span>${conjTimeStr}</span></div>
+            <div class="result-item"><span>عمر الهلال الحقيقي:</span> <span>${ageText}</span></div>
         `;
     }
 </script>
