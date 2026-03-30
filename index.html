@@ -94,30 +94,30 @@
 
     // --- بداية مرحلة الحسابات الفلكية (المسار الأول) ---
     function getTrueConjunction(dateObj) {
-        const year = dateObj.getFullYear();
-        const month = dateObj.getMonth() + 1;
-        const day = dateObj.getDate();
-        
-        // حساب الرقم k (عدد الشهور القمرية منذ عام 2000)
-        const k = Math.floor((year + (month - 1) / 12 - 2000) * 12.3685);
-        const T = k / 1236.85;
-        
-        // التوقيت المتوسط للاقتران (بصيغة اليوم الجولياني)
-        let JDE = 2451550.09765 + 29.530588853 * k 
-                 + 0.0001337 * T * T 
-                 - 0.000000150 * T * T * T;
-        
-        // تصحيحات شمسية وقمرية بسيطة (الشذوذ المتوسط)
-        const M = (2.5534 + 29.1053567 * k) * Math.PI / 180; // الشمس
-        const Mprime = (201.5643 + 385.816935 * k) * Math.PI / 180; // القمر
-        
-        JDE += (0.1734 - 0.000393 * T) * Math.sin(M) 
-               - 0.4068 * Math.sin(Mprime);
+    const year = dateObj.getFullYear();
+    const month = dateObj.getMonth() + 1;
+    
+    // حساب k بناءً على الشهر والسنة المختارين بدقة لضمان اقتران الشهر الحالي
+    const k = Math.floor((year + (month - 1) / 12 - 2000) * 12.3685) + 0.5;
+    const T = k / 1236.85;
+    
+    // المعادلة التصحيحية لجان ميموس
+    let JDE = 2451550.09765 + 29.530588853 * k 
+             + 0.0001337 * T * T 
+             - 0.000000150 * T * T * T;
+    
+    // الشذوذ المتوسط للشمس والقمر لضبط التأثيرات الجاذبية
+    const M = (2.5534 + 29.1053567 * k) * Math.PI / 180;
+    const Mprime = (201.5643 + 385.816935 * k) * Math.PI / 180;
+    
+    // إضافة التصحيحات الدورية الرئيسية
+    JDE += (0.1734 - 0.000393 * T) * Math.sin(M) 
+           - 0.4068 * Math.sin(Mprime);
 
-        // تحويل اليوم الجولياني إلى تاريخ ميلادي ووقت محلي (العراق +3)
-        const date = new Date((JDE - 2440587.5) * 86400000);
-        return date;
-    }
+    // التحويل للتوقيت المحلي (العراق +3)
+    const resultDate = new Date((JDE - 2440587.5) * 86400000);
+    return resultDate;
+}
 
     function calculate() {
         const lat = document.getElementById('lat').value;
